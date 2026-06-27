@@ -58,13 +58,17 @@ export async function onRequestGet({ env }) {
         `resources/image/upload?prefix=${encodeURIComponent(assetFolder + "/")}&tags=true&max_results=100`
       ).catch(() => ({ resources: [] }));
     }
-    return (res.resources || []).sort((a, b) => a.public_id.localeCompare(b.public_id));
+    return (res.resources || []).sort((a, b) =>
+      a.public_id.localeCompare(b.public_id, undefined, { numeric: true })
+    );
   }
 
   try {
     // ルート直下のフォルダ = セクション
     const root = await get("folders").catch(() => ({ folders: [] }));
-    const sectionDirs = (root.folders || []).sort((a, b) => a.name.localeCompare(b.name));
+    const sectionDirs = (root.folders || []).sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true })
+    );
 
     const sections = [];
     for (const secDir of sectionDirs) {
@@ -72,7 +76,9 @@ export async function onRequestGet({ env }) {
       const sub = await get(`folders/${encodeURIComponent(secDir.path)}`).catch(() => ({ folders: [] }));
 
       const folders = [];
-      for (const f of (sub.folders || []).sort((a, b) => a.name.localeCompare(b.name))) {
+      for (const f of (sub.folders || []).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true })
+      )) {
         const resources = await listImages(f.path);
         let folderMarker = null;
         for (const r of resources) {
