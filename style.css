@@ -262,6 +262,7 @@ html, body {
 #image-view {
   grid-template-columns: repeat(var(--img-cols, 6), minmax(0, 1fr));
 }
+.loading { color: var(--ink-soft); font-size: 0.9rem; padding: 4px 2px; }
 
 /* ── Cell (folder, file, or photo) ── */
 .cell {

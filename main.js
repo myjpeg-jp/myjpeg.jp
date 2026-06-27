@@ -4,8 +4,41 @@
 const IG_ICON = `<svg class="link-icon" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M 24.77 8.84 C 24.77 9.16 24.68 9.47 24.50 9.73 C 24.32 10.00 24.07 10.21 23.78 10.33 C 23.48 10.46 23.16 10.49 22.84 10.43 C 22.53 10.37 22.24 10.21 22.01 9.99 C 21.79 9.76 21.64 9.47 21.57 9.16 C 21.51 8.84 21.54 8.52 21.67 8.22 C 21.79 7.93 22.00 7.68 22.27 7.50 C 22.53 7.32 22.84 7.23 23.16 7.23 C 23.38 7.23 23.58 7.27 23.78 7.35 C 23.97 7.43 24.15 7.55 24.30 7.70 C 24.45 7.85 24.57 8.03 24.65 8.22 C 24.73 8.42 24.77 8.62 24.77 8.84 ZM 16.01 20.46 C 15.13 20.46 14.27 20.20 13.54 19.71 C 12.80 19.22 12.23 18.52 11.89 17.70 C 11.55 16.89 11.47 15.99 11.64 15.12 C 11.81 14.26 12.23 13.46 12.86 12.84 C 13.48 12.22 14.28 11.79 15.14 11.62 C 16.01 11.45 16.91 11.53 17.72 11.87 C 18.54 12.21 19.23 12.78 19.73 13.52 C 20.22 14.25 20.48 15.11 20.48 16.00 C 20.48 17.18 20.01 18.31 19.17 19.15 C 18.33 19.99 17.20 20.46 16.01 20.46 ZM 16.01 9.12 C 14.65 9.13 13.32 9.53 12.19 10.29 C 11.06 11.05 10.18 12.12 9.66 13.38 C 9.14 14.64 9.01 16.02 9.28 17.36 C 9.54 18.69 10.20 19.92 11.16 20.88 C 12.13 21.84 13.36 22.49 14.69 22.76 C 16.03 23.02 17.41 22.88 18.67 22.36 C 19.92 21.84 21.00 20.95 21.75 19.82 C 22.51 18.69 22.91 17.36 22.91 16.00 C 22.91 15.09 22.73 14.19 22.39 13.35 C 22.04 12.52 21.53 11.75 20.89 11.11 C 20.25 10.47 19.49 9.96 18.66 9.62 C 17.82 9.27 16.92 9.09 16.01 9.09 V 9.12 ZM 16.01 2.61 C 12.39 2.61 11.94 2.61 10.49 2.67 C 9.38 2.71 8.28 2.93 7.25 3.34 C 6.35 3.65 5.53 4.17 4.87 4.86 C 4.18 5.53 3.65 6.34 3.32 7.24 C 2.92 8.27 2.71 9.37 2.70 10.48 C 2.64 11.91 2.62 12.40 2.62 16.00 C 2.62 19.59 2.62 20.10 2.70 21.54 C 2.71 22.65 2.92 23.75 3.32 24.79 C 3.65 25.69 4.18 26.50 4.87 27.17 C 5.54 27.84 6.36 28.37 7.25 28.69 C 8.28 29.12 9.38 29.34 10.49 29.34 C 11.94 29.39 12.41 29.42 16.01 29.42 C 19.62 29.42 20.11 29.42 21.55 29.34 C 22.67 29.33 23.77 29.11 24.81 28.69 C 25.69 28.35 26.50 27.83 27.18 27.17 C 27.85 26.49 28.37 25.68 28.70 24.79 C 29.11 23.75 29.31 22.65 29.32 21.54 C 29.38 20.10 29.38 19.62 29.38 16.00 C 29.38 12.37 29.38 11.91 29.32 10.48 C 29.32 9.37 29.11 8.27 28.70 7.24 C 28.37 6.35 27.85 5.53 27.18 4.86 C 26.51 4.18 25.70 3.66 24.81 3.34 C 23.77 2.94 22.67 2.71 21.55 2.67 C 20.11 2.60 19.67 2.58 16.01 2.58 V 2.61 ZM 16.01 5.03 C 19.60 5.03 20.03 5.03 21.42 5.10 C 22.27 5.11 23.11 5.27 23.91 5.56 C 24.48 5.77 25.00 6.10 25.44 6.52 C 25.90 6.94 26.25 7.46 26.46 8.05 C 26.76 8.84 26.91 9.68 26.91 10.52 C 26.97 11.95 27.00 12.38 27.00 15.95 C 27.00 19.52 27.00 19.95 26.91 21.37 C 26.91 22.22 26.76 23.07 26.46 23.87 C 26.25 24.46 25.90 24.99 25.44 25.42 C 25.00 25.83 24.48 26.16 23.91 26.38 C 23.11 26.67 22.27 26.82 21.42 26.82 C 20.03 26.91 19.60 26.91 16.01 26.91 C 12.43 26.91 12.01 26.91 10.60 26.82 C 9.75 26.82 8.91 26.67 8.11 26.38 C 7.54 26.15 7.02 25.83 6.57 25.42 C 6.15 24.97 5.82 24.44 5.61 23.87 C 5.31 23.07 5.15 22.22 5.14 21.37 C 5.07 19.95 5.04 19.54 5.04 15.95 C 5.04 12.36 5.04 11.95 5.14 10.52 C 5.15 9.68 5.31 8.84 5.61 8.05 C 5.82 7.48 6.15 6.96 6.57 6.52 C 7.02 6.11 7.54 5.78 8.11 5.56 C 8.91 5.27 9.75 5.12 10.60 5.10 C 12.06 5.01 12.43 5.01 16.01 5.01 V 5.03 Z"></path></svg>`;
 
 // ═══════════════════════════════════════════════════════════
+//  CLOUDINARY  ← 画像はここ経由で配信（自動で WebP/AVIF 変換＋圧縮）
+//  使い方:  cld("folder-01/DSCF2701")  ← Cloudinary の public_id を渡すだけ
+// ═══════════════════════════════════════════════════════════
+const CLOUDINARY = "xfydzgu3";
+const cld = (id, opts = "f_auto,q_auto") =>
+  `https://res.cloudinary.com/${CLOUDINARY}/image/upload/${opts}/${id}`;
+
+// タグから画像一覧を取得（list.json）。結果はキャッシュ。
+// Cloudinary 側で画像に「フォルダのid（例: folder-01）」のタグを付けるだけで自動表示。
+const _listCache = {};
+async function fetchImagesByTag(tag) {
+  if (_listCache[tag]) return _listCache[tag];
+  try {
+    const res = await fetch(`https://res.cloudinary.com/${CLOUDINARY}/image/list/${tag}.json`, { cache: "no-cache" });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const imgs = (json.resources || [])
+      .sort((a, b) => a.public_id.localeCompare(b.public_id))
+      .map(r => ({
+        url: `https://res.cloudinary.com/${CLOUDINARY}/image/upload/f_auto,q_auto/v${r.version}/${r.public_id}.${r.format}`,
+        name: r.public_id.split("/").pop() + "." + r.format,
+      }));
+    _listCache[tag] = imgs;
+    return imgs;
+  } catch { return []; }
+}
+// Cloudinary を優先。未設定/未タグなら data の images（プレースホルダ）にフォールバック。
+async function getFolderImages(f) {
+  const imgs = await fetchImagesByTag(f.tag || f.id);
+  return imgs.length ? imgs : (f.images || []);
+}
+
+// ═══════════════════════════════════════════════════════════
 //  DATA  ← フォルダ・画像・リンクはここだけ編集すればOK
-//         画像は後で Cloudinary の URL に差し替えてください。
+//  画像: { url: cld("folder-01/DSCF2701"), name: "DSCF2701.jpg" } の形に置き換え
 // ═══════════════════════════════════════════════════════════
 const data = {
   // デスクトップ上のファイル（任意。不要なら空配列に）
@@ -357,21 +390,27 @@ function showImages() {
   gridSlider.classList.remove("hidden");
 }
 
-function route(view) {
+async function route(view) {
   setActive(view);
 
   if (view === "overview") { showOverview(); window.scrollTo(0, 0); return; }
 
-  if (view === "all") {
-    renderImages(data.folders.filter(f => f.section === "selected-work").flatMap(f => f.images));
-  } else if (view === "all-exp") {
-    renderImages(data.folders.filter(f => f.section === "experiments").flatMap(f => f.images));
-  } else if (view.startsWith("folder:")) {
-    const id = view.slice(7);
-    renderImages(data.folders.find(f => f.id === id)?.images ?? []);
-  }
   showImages();
   window.scrollTo(0, 0);
+  imageView.innerHTML = '<p class="loading">読み込み中…</p>';
+
+  let imgs = [];
+  if (view === "all") {
+    const fs = data.folders.filter(f => f.section === "selected-work");
+    imgs = (await Promise.all(fs.map(getFolderImages))).flat();
+  } else if (view === "all-exp") {
+    const fs = data.folders.filter(f => f.section === "experiments");
+    imgs = (await Promise.all(fs.map(getFolderImages))).flat();
+  } else if (view.startsWith("folder:")) {
+    const f = data.folders.find(x => x.id === view.slice(7));
+    imgs = f ? await getFolderImages(f) : [];
+  }
+  renderImages(imgs);
 }
 
 // ═══════════════════════════════════════════════════════════
