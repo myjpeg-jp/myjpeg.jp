@@ -3,21 +3,21 @@
 //  Cloudinary の Admin API でフォルダ＆画像を取得して JSON で返す。
 //  秘密鍵は Cloudflare の環境変数に保管（ブラウザには出ない）。
 //
-//  必要な環境変数（Pages → Settings → Variables and Secrets）:
-//    CLD_CLOUD   … cloud name（例: xfydzgu3）
-//    CLD_KEY     … API Key
-//    CLD_SECRET  … API Secret（Secret として登録）
+//  構成（Cloudinary 側）:
+//    ルート直下のフォルダ = セクション（例: Selected Work / Experiments / iPhone Photo）
+//      その中のサブフォルダ = ギャラリーのフォルダ（サイドバーに出る）
+//        その中の画像 = ギャラリーの中身
+//
+//  並び順: フォルダ名の昇順。先頭に "01 " 等の数字を付けると順番を制御でき、
+//          表示名からはその数字プレフィックスは自動で除かれます。
+//
+//  カラーラベル（タグ）:  画像 = m-<色>   /  フォルダ = 中の1枚に fm-<色>
+//
+//  必要な環境変数:  CLD_CLOUD / CLD_KEY / CLD_SECRET
 // ════════════════════════════════════════════════════════════
-
-// セクション（＝Cloudinaryの親フォルダ）。ここだけは構成として固定。
-const SECTIONS = [
-  { id: "selected-work", label: "Selected Work", allLabel: "All Work",        allId: "all",     path: "Selected Work" },
-  { id: "experiments",   label: "Experiments",   allLabel: "All Experiments", allId: "all-exp", path: "Experiments" },
-];
 
 const COLORS = ["red", "orange", "yellow", "green", "blue", "purple", "gray", "grey"];
 
-// tags から "prefix-色名" を探してマーカー色を返す（例: prefix="m" → "m-blue"）
 function pickMarker(tags, prefix) {
   for (const t of tags || []) {
     const m = String(t).toLowerCase().match(new RegExp(`^${prefix}-([a-z]+)$`));
@@ -25,6 +25,8 @@ function pickMarker(tags, prefix) {
   }
   return null;
 }
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const displayName = (s) => s.replace(/^\d+[\s._-]+/, "");   // 先頭の "01 " 等を除去
 
 export async function onRequestGet({ env }) {
   const cloud = env.CLD_CLOUD;
@@ -46,53 +48,57 @@ export async function onRequestGet({ env }) {
     marker: pickMarker(r.tags, "m"),
   });
 
+  async function listImages(assetFolder) {
+    let res = await get(
+      `resources/by_asset_folder?asset_folder=${encodeURIComponent(assetFolder)}&tags=true&max_results=100`
+    ).catch(() => ({ resources: [] }));
+    if (!res.resources || !res.resources.length) {
+      // fixed-folder アカウント用フォールバック（public_id 前方一致）
+      res = await get(
+        `resources/image/upload?prefix=${encodeURIComponent(assetFolder + "/")}&tags=true&max_results=100`
+      ).catch(() => ({ resources: [] }));
+    }
+    return (res.resources || []).sort((a, b) => a.public_id.localeCompare(b.public_id));
+  }
+
   try {
+    // ルート直下のフォルダ = セクション
+    const root = await get("folders").catch(() => ({ folders: [] }));
+    const sectionDirs = (root.folders || []).sort((a, b) => a.name.localeCompare(b.name));
+
     const sections = [];
-    for (const sec of SECTIONS) {
-      // セクション直下のサブフォルダ一覧（= ギャラリーのフォルダ）
-      const sub = await get(`folders/${encodeURIComponent(sec.path)}`).catch(() => ({ folders: [] }));
+    for (const secDir of sectionDirs) {
+      const label = displayName(secDir.name);
+      const sub = await get(`folders/${encodeURIComponent(secDir.path)}`).catch(() => ({ folders: [] }));
+
       const folders = [];
-
-      for (const f of sub.folders || []) {
-        const assetFolder = f.path; // 例: "Selected Work/Folder 01"
-
-        // dynamic-folder 用。空なら fixed-folder（public_id 前方一致）でフォールバック。
-        let res = await get(
-          `resources/by_asset_folder?asset_folder=${encodeURIComponent(assetFolder)}&tags=true&max_results=100`
-        ).catch(() => ({ resources: [] }));
-        if (!res.resources || !res.resources.length) {
-          res = await get(
-            `resources/image/upload?prefix=${encodeURIComponent(assetFolder + "/")}&tags=true&max_results=100`
-          ).catch(() => ({ resources: [] }));
-        }
-
-        const resources = (res.resources || []).sort((a, b) =>
-          a.public_id.localeCompare(b.public_id)
-        );
-
-        // フォルダのマーカー: いずれかの画像の "fm-色名" タグ
+      for (const f of (sub.folders || []).sort((a, b) => a.name.localeCompare(b.name))) {
+        const resources = await listImages(f.path);
         let folderMarker = null;
         for (const r of resources) {
           const m = pickMarker(r.tags, "fm");
           if (m) { folderMarker = m; break; }
         }
-
         folders.push({
-          id: assetFolder,
-          name: f.name,
+          id: f.path,
+          name: displayName(f.name),
           marker: folderMarker,
           images: resources.map(buildImage),
         });
       }
 
       sections.push({
-        id: sec.id, label: sec.label, allLabel: sec.allLabel, allId: sec.allId, folders,
+        id: slug(secDir.name),
+        label,
+        allLabel: "All " + label,
+        allId: "all-" + slug(secDir.name),
+        folders,
       });
     }
 
     return json({ sections }, 200, "public, max-age=60");
   } catch (e) {
-    return json({ error: String(e && e.message || e) }, 500);
+    return json({ error: String((e && e.message) || e) }, 500);
   }
 }
 

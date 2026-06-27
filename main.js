@@ -505,7 +505,7 @@ function jumpTo(view) {
   if (window.innerWidth <= MOBILE_BP) setMenu(false);
 }
 document.querySelector(".tl-red")?.addEventListener("click", () => jumpTo("overview"));
-document.querySelector(".tl-green")?.addEventListener("click", () => jumpTo("all"));
+document.querySelector(".tl-green")?.addEventListener("click", () => jumpTo(sections[0]?.allId || "all"));
 
 // ═══════════════════════════════════════════════════════════
 //  FOOTER CLOCK  — realtime timestamp + timezone
