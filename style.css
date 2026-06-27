@@ -526,6 +526,7 @@ html, body {
     margin-bottom: 0;
     gap: 12px;
     align-items: center;
+    padding: 0px 2px 0;
   }
   .titlebar .site-title {
     font-size: 1.0625rem;        /* HIG Headline · 17pt */
