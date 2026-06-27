@@ -8,33 +8,6 @@ const IG_ICON = `<svg class="link-icon" viewBox="0 0 32 32" fill="currentColor" 
 //  使い方:  cld("folder-01/DSCF2701")  ← Cloudinary の public_id を渡すだけ
 // ═══════════════════════════════════════════════════════════
 const CLOUDINARY = "xfydzgu3";
-const cld = (id, opts = "f_auto,q_auto") =>
-  `https://res.cloudinary.com/${CLOUDINARY}/image/upload/${opts}/${id}`;
-
-// タグから画像一覧を取得（list.json）。結果はキャッシュ。
-// Cloudinary 側で画像に「フォルダのid（例: folder-01）」のタグを付けるだけで自動表示。
-const _listCache = {};
-async function fetchImagesByTag(tag) {
-  if (_listCache[tag]) return _listCache[tag];
-  try {
-    const res = await fetch(`https://res.cloudinary.com/${CLOUDINARY}/image/list/${tag}.json`, { cache: "no-cache" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    const imgs = (json.resources || [])
-      .sort((a, b) => a.public_id.localeCompare(b.public_id))
-      .map(r => ({
-        url: `https://res.cloudinary.com/${CLOUDINARY}/image/upload/f_auto,q_auto/v${r.version}/${r.public_id}.${r.format}`,
-        name: r.public_id.split("/").pop() + "." + r.format,
-      }));
-    _listCache[tag] = imgs;
-    return imgs;
-  } catch { return []; }
-}
-// Cloudinary を優先。未設定/未タグなら data の images（プレースホルダ）にフォールバック。
-async function getFolderImages(f) {
-  const imgs = await fetchImagesByTag(f.tag || f.id);
-  return imgs.length ? imgs : (f.images || []);
-}
 
 // ═══════════════════════════════════════════════════════════
 //  DATA  ← フォルダ・画像・リンクはここだけ編集すればOK
@@ -218,11 +191,42 @@ const sidebar      = document.querySelector(".sidebar");
 const menuToggle   = document.getElementById("menu-toggle");
 
 // ═══════════════════════════════════════════════════════════
+//  GALLERY DATA  ← Cloudinary（/api/gallery）から取得
+//  失敗時（ローカルプレビュー等）は data.folders にフォールバック
+// ═══════════════════════════════════════════════════════════
+let sections = [];
+async function loadGallery() {
+  try {
+    const r = await fetch("/api/gallery", { cache: "no-cache" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j.sections)) return j.sections;
+    }
+  } catch {}
+  return fallbackSections();
+}
+function fallbackSections() {
+  const mk = (label, allLabel, allId, section) => ({
+    id: section, label, allLabel, allId,
+    folders: data.folders
+      .filter(f => f.section === section)
+      .map(f => ({ id: f.id, name: f.name, marker: f.marker, images: f.images || [] })),
+  });
+  return [
+    mk("Selected Work", "All Work", "all", "selected-work"),
+    mk("Experiments", "All Experiments", "all-exp", "experiments"),
+  ];
+}
+function findFolder(id) {
+  for (const s of sections) { const f = s.folders.find(x => x.id === id); if (f) return f; }
+  return null;
+}
+const sectionByAllId = (allId) => sections.find(s => s.allId === allId);
+
+// ═══════════════════════════════════════════════════════════
 //  SIDEBAR
 // ═══════════════════════════════════════════════════════════
 function renderNav() {
-  const selected = data.folders.filter(f => f.section === "selected-work");
-  const experiments = data.folders.filter(f => f.section === "experiments");
   const parts = [];
 
   // Overview (no section label)
@@ -235,28 +239,17 @@ function renderNav() {
       </ul>
     </div>`);
 
-  // Selected Work
-  parts.push(`
-    <div class="nav-section">
-      <p class="nav-label">Selected Work</p>
-      <ul class="nav-list">
-        <li class="nav-item" data-view="all">
-          ${navFolderGlyph()}<span class="label">All Work</span>
-        </li>
-        ${selected.map(navItem).join("")}
-      </ul>
-    </div>`);
-
-  // Experiments
-  if (experiments.length) {
+  // Sections (from Cloudinary). 空のセクションは出さない。
+  for (const s of sections) {
+    if (!s.folders.length) continue;
     parts.push(`
       <div class="nav-section">
-        <p class="nav-label">Experiments</p>
+        <p class="nav-label">${s.label}</p>
         <ul class="nav-list">
-          <li class="nav-item" data-view="all-exp">
-            ${navFolderGlyph()}<span class="label">All Experiments</span>
+          <li class="nav-item" data-view="${s.allId}">
+            ${navFolderGlyph()}<span class="label">${s.allLabel}</span>
           </li>
-          ${experiments.map(navItem).join("")}
+          ${s.folders.map(navItem).join("")}
         </ul>
       </div>`);
   }
@@ -306,14 +299,12 @@ function renderOverview() {
       <span class="cell-caption">${dotSpan(f.marker)}${f.name}</span>
     </div>`;
 
-  const selected = data.folders.filter(f => f.section === "selected-work");
-  const experiments = data.folders.filter(f => f.section === "experiments");
-
   // One row-group per sidebar section, separated by a divider
   const groups = [];
-  if (data.files.length)   groups.push(data.files.map(fileCell).join(""));
-  if (selected.length)     groups.push(selected.map(folderCell).join(""));
-  if (experiments.length)  groups.push(experiments.map(folderCell).join(""));
+  if (data.files.length) groups.push(data.files.map(fileCell).join(""));
+  for (const s of sections) {
+    if (s.folders.length) groups.push(s.folders.map(folderCell).join(""));
+  }
 
   overviewView.innerHTML = groups
     .map(g => `<div class="ov-group">${g}</div>`)
@@ -362,7 +353,7 @@ function renderImages(images) {
   imageView.innerHTML = images.map(img => `
     <div class="cell photo-cell" title="${img.name || ""}">
       <div class="cell-icon"><img src="${img.url}" loading="lazy" alt="${img.name || ""}"></div>
-      <span class="cell-caption">${img.name || ""}</span>
+      <span class="cell-caption">${dotSpan(img.marker)}${img.name || ""}</span>
     </div>`).join("");
 
   imageView.querySelectorAll(".photo-cell img").forEach((im, i) =>
@@ -390,25 +381,20 @@ function showImages() {
   gridSlider.classList.remove("hidden");
 }
 
-async function route(view) {
+function route(view) {
   setActive(view);
 
   if (view === "overview") { showOverview(); window.scrollTo(0, 0); return; }
 
   showImages();
   window.scrollTo(0, 0);
-  imageView.innerHTML = '<p class="loading">読み込み中…</p>';
 
   let imgs = [];
-  if (view === "all") {
-    const fs = data.folders.filter(f => f.section === "selected-work");
-    imgs = (await Promise.all(fs.map(getFolderImages))).flat();
-  } else if (view === "all-exp") {
-    const fs = data.folders.filter(f => f.section === "experiments");
-    imgs = (await Promise.all(fs.map(getFolderImages))).flat();
-  } else if (view.startsWith("folder:")) {
-    const f = data.folders.find(x => x.id === view.slice(7));
-    imgs = f ? await getFolderImages(f) : [];
+  const sec = sectionByAllId(view);              // "all" / "all-exp" → セクション集約
+  if (sec) imgs = sec.folders.flatMap(f => f.images);
+  else if (view.startsWith("folder:")) {
+    const f = findFolder(view.slice(7));
+    imgs = f ? f.images : [];
   }
   renderImages(imgs);
 }
@@ -554,7 +540,10 @@ tickClock();
 // ═══════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════
-renderNav();
-renderOverview();
-syncSlider();
-route("overview");   // ← 起動時の表示。"all" にすると全作品グリッドが初期表示。
+(async () => {
+  sections = await loadGallery();   // Cloudinary からフォルダ＆画像を取得
+  renderNav();
+  renderOverview();
+  syncSlider();
+  route("overview");                // ← 起動時の表示
+})();
