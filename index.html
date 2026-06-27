@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>myjpeg.jp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="content-wrap">
+
+    <!-- ── Sidebar (fixed) ── -->
+    <aside class="sidebar">
+      <!-- Title / header row -->
+      <div class="titlebar">
+        <span class="traffic-lights">
+          <span class="tl tl-red"></span>
+          <span class="tl tl-yellow"></span>
+          <span class="tl tl-green"></span>
+        </span>
+        <span class="site-title">myjpeg.jp</span>
+        <button class="menu-toggle" id="menu-toggle" aria-label="メニュー" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+
+      <!-- Nav (rendered by main.js) -->
+      <nav class="nav" id="nav"></nav>
+    </aside>
+
+    <!-- ── Main content ── -->
+    <main class="pages">
+      <div class="pages-scroll">
+        <!-- Overview: folder + file grid -->
+        <section id="overview-view" class="finder-grid"></section>
+        <!-- Folder / All Work: image grid -->
+        <section id="image-view" class="finder-grid hidden"></section>
+      </div>
+
+      <!-- Footer: copyright (center) + grid size slider (right) -->
+      <footer class="main-footer">
+        <span class="copyright" id="footer-clock"></span>
+        <div class="grid-slider hidden" id="grid-slider">
+          <input type="range" id="gs-range" min="1" max="6" value="1" aria-label="サムネイルの大きさ">
+        </div>
+      </footer>
+    </main>
+
+  </div>
+
+  <!-- Document popup (about me.rtf) -->
+  <div class="doc-modal hidden" id="doc-modal">
+    <div class="doc-window" role="dialog" aria-modal="true">
+      <div class="doc-titlebar">
+        <span class="traffic-lights">
+          <span class="tl tl-red" id="doc-close" role="button" aria-label="閉じる"></span>
+          <span class="tl tl-yellow"></span>
+          <span class="tl tl-green"></span>
+        </span>
+        <span class="doc-title" id="doc-title"></span>
+      </div>
+      <div class="doc-body" id="doc-body"></div>
+    </div>
+  </div>
+
+  <!-- Lightbox / preview -->
+  <div class="lightbox hidden" id="lightbox">
+    <button class="lb-close" id="lb-close" aria-label="閉じる">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+
+    <button class="lb-nav lb-prev" id="lb-prev" aria-label="前の画像">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+
+    <figure class="lb-figure">
+      <img class="lb-img" id="lb-img" src="" alt="">
+      <figcaption class="lb-caption" id="lb-caption"></figcaption>
+    </figure>
+
+    <button class="lb-nav lb-next" id="lb-next" aria-label="次の画像">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
