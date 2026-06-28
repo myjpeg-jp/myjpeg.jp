@@ -609,8 +609,10 @@ function tzLabel() {
 
 function tickClock() {
   if (window.innerWidth <= MOBILE_BP) {
-    // モバイルはミニマム表示（調整バーと被らないように）
-    footerClock.textContent = "© MYJPEG.JP";
+    // モバイルは現在時刻（HH:MM:SS）
+    const d = new Date();
+    footerClock.textContent =
+      `© ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   } else {
     const d = new Date();
     footerClock.textContent =
