@@ -377,7 +377,7 @@ html, body {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.3s var(--ease), visibility 0.3s var(--ease);
+  transition: opacity 0.44s var(--ease), visibility 0.44s var(--ease);
 }
 .lightbox.open { opacity: 1; visibility: visible; pointer-events: auto; }
 .lightbox.hidden { display: none; }       /* 初期描画前のみ（JSで初回に外す） */
@@ -395,10 +395,10 @@ html, body {
   object-fit: contain;
   border-radius: 0;                       /* 角丸なし */
   box-shadow: 0 14px 50px var(--img-shadow);
-  transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
+  transition: transform 0.46s var(--ease-out), opacity 0.46s var(--ease-out);
 }
 /* 開く時に少し拡大しながらフェードイン */
-.lightbox .lb-img { transform: scale(0.96); opacity: 0; }
+.lightbox .lb-img { transform: scale(0.93); opacity: 0; }
 .lightbox.open .lb-img { transform: scale(1); opacity: 1; }
 .lb-caption {
   font-size: 0.8125rem;         /* HIG Footnote · 13pt */

@@ -515,18 +515,19 @@ function lbStep(d) {
   if (lbImages.length <= 1) return;
   if (reduceMotion) { setLbImage(lbIndex + d); return; }
   const dir = d > 0 ? 1 : -1;
-  lbImg.style.transition = "transform 0.16s ease-in, opacity 0.16s ease-in";
-  lbImg.style.transform = `translateX(${-dir * 36}px)`;
+  const OUT = 210, DIST = 60;
+  lbImg.style.transition = `transform ${OUT}ms cubic-bezier(0.4,0,1,1), opacity ${OUT}ms ease-in`;
+  lbImg.style.transform = `translateX(${-dir * DIST}px)`;
   lbImg.style.opacity = "0";
   setTimeout(() => {
     setLbImage(lbIndex + d);
     lbImg.style.transition = "none";
-    lbImg.style.transform = `translateX(${dir * 36}px)`;   // 反対側から入ってくる
-    void lbImg.offsetWidth;                                  // reflow を強制
-    lbImg.style.transition = "transform 0.24s cubic-bezier(0.32,0.72,0,1), opacity 0.24s ease-out";
+    lbImg.style.transform = `translateX(${dir * DIST}px)`;   // 反対側から入ってくる
+    void lbImg.offsetWidth;                                   // reflow を強制
+    lbImg.style.transition = "transform 0.42s var(--ease-out), opacity 0.36s ease-out";
     lbImg.style.transform = "translateX(0)";
     lbImg.style.opacity = "1";
-  }, 160);
+  }, OUT);
 }
 
 lbClose.addEventListener("click", e => { e.stopPropagation(); closeLightbox(); });
