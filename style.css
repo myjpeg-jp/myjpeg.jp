@@ -539,13 +539,18 @@ html, body {
   border-radius: 50%; background: #fff;
   border: 0.5px solid rgba(0,0,0,0.2);
   box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  transition: transform 0.14s var(--ease), box-shadow 0.16s ease;
 }
 #gs-range::-moz-range-thumb {
   width: 16px; height: 16px;
   border-radius: 50%; background: #fff;
   border: 0.5px solid rgba(0,0,0,0.2);
   box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  transition: transform 0.14s var(--ease), box-shadow 0.16s ease;
 }
+/* 掴んだ時に少し大きく沈み込む */
+#gs-range:active::-webkit-slider-thumb { transform: scale(1.2); box-shadow: 0 2px 7px rgba(0,0,0,0.42); }
+#gs-range:active::-moz-range-thumb     { transform: scale(1.2); box-shadow: 0 2px 7px rgba(0,0,0,0.42); }
 
 /* ════════════ Responsive ════════════ */
 @media (max-width: 760px) {

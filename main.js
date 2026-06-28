@@ -574,9 +574,13 @@ function currentCols() {
 
 // 列数は :root に設定 → Overview・画像グリッド両方に効く。
 // サムネは FLIP で「実際に拡縮しながら」滑らかに動かす（瞬間的な組み替えにしない）。
+let _appliedCols = null;
 function applyCols(c) {
+  if (c === _appliedCols) return;        // 列数が変わらない時は何もしない（連続入力の無駄打ち防止）
+  const prev = _appliedCols;
+  _appliedCols = c;
   const setVar = () => document.documentElement.style.setProperty("--img-cols", c);
-  if (reduceMotion || imageView.classList.contains("hidden")) { setVar(); return; }
+  if (reduceMotion || prev === null || imageView.classList.contains("hidden")) { setVar(); return; }
 
   // アニメ対象: サムネ画像（拡縮あり）＋ キャプション（移動のみで歪ませず追尾）
   const icons = [...imageView.querySelectorAll(".photo-cell .cell-icon")];
@@ -614,13 +618,15 @@ function syncSlider() {
   const c = currentCols();
   gsRange.min = 1;
   gsRange.max = mc;
-  gsRange.value = mc + 1 - c;   // 左端 = 最大カラム
+  gsRange.step = "any";          // つまみを段階でなく連続的に動かす（カクつき防止）
+  gsRange.value = mc + 1 - c;    // 左端 = 最大カラム
   applyCols(c);
 }
 
 gsRange.addEventListener("input", () => {
   const mc = maxCols();
-  const c = mc + 1 - parseInt(gsRange.value, 10);
+  // 連続値 → 最寄りのカラム数に丸める（つまみ自体は滑らかに動く）
+  const c = Math.min(Math.max(mc + 1 - Math.round(parseFloat(gsRange.value)), 1), mc);
   applyCols(c);
   lsSet("img-cols", c);
 });
