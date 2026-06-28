@@ -351,32 +351,17 @@ let lbIndex  = 0;
 // Cloudinary URL に幅リサイズを差し込む（c_limit = 元より大きくはしない）
 const sized = (url, w) => url.replace("/f_auto,q_auto/", `/f_auto,q_auto,c_limit,w_${w}/`);
 
-// 現在のカラム数・表示幅・DPR から最適なサムネ幅を算出（100px刻みでキャッシュ効きやすく）
+// サムネ解像度は「1カラム表示」を前提に固定（＝表示領域いっぱいの幅 × DPR、上限2400）。
+// カラム数に依存しないので、スライダーで変えても再読み込みは起きない。
 function thumbW() {
-  const cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--img-cols")) || 6;
-  const gap = 24;
   const avail = imageView.clientWidth || window.innerWidth;
-  const cell = Math.max(120, (avail - gap * (cols - 1)) / cols);
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  return Math.min(2400, Math.ceil((cell * dpr) / 100) * 100);
-}
-
-// 現在ロード済みのサムネ幅。スライダー等で必要幅が増えたら取り直す（拡大時のみ）。
-let loadedThumbW = 0;
-let _thumbT;
-function refreshThumbRes() {
-  clearTimeout(_thumbT);
-  _thumbT = setTimeout(() => {
-    if (!imageView.classList.contains("hidden") && lbImages.length && thumbW() > loadedThumbW) {
-      renderImages(lbImages);   // 高解像度で取り直し
-    }
-  }, 180);
+  return Math.min(2400, Math.ceil((avail * dpr) / 100) * 100);
 }
 
 function renderImages(images) {
   lbImages = images;
   const tw = thumbW();
-  loadedThumbW = tw;
   imageView.innerHTML = images.map(img => `
     <div class="cell photo-cell" title="${img.name || ""}">
       <div class="cell-icon"><img src="${sized(img.url, tw)}" loading="lazy" alt="${img.name || ""}"></div>
@@ -505,14 +490,10 @@ gsRange.addEventListener("input", () => {
   const c = mc + 1 - parseInt(gsRange.value, 10);
   applyCols(c);
   lsSet("img-cols", c);
-  refreshThumbRes();              // 少数カラムに拡大したら高解像度で取り直す
 });
 
 let rT;
-window.addEventListener("resize", () => {
-  clearTimeout(rT);
-  rT = setTimeout(() => { syncSlider(); refreshThumbRes(); }, 120);
-});
+window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(syncSlider, 120); });
 
 // ═══════════════════════════════════════════════════════════
 //  MOBILE MENU (sidebar pulldown)
