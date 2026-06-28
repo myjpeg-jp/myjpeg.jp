@@ -475,7 +475,7 @@ html, body {
 }
 
 .doc-body {
-  padding: 12px 26px 100px;
+  padding: 12px 26px 132px;
   overflow-y: auto;
   color: var(--ink);
   font-size: 1.0625rem;           /* Body · 17pt */
@@ -504,7 +504,7 @@ html, body {
 @media (max-width: 760px) {
   .doc-modal { padding: 16px 24px; }   /* more side margin → narrower window */
   .doc-window { max-height: 78vh; border-radius: 20px; }
-  .doc-body { padding: 10px 22px 86px; }
+  .doc-body { padding: 10px 22px 112px; }
 }
 
 /* ════════════ Grid size slider (in footer, right) ════════════ */

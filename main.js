@@ -19,7 +19,7 @@ const data = {
       body: `
         <p>my jpegs.<br>a personal documentary.</p>
         <p>contact: <a href="mailto:hello@myjpeg.jp">hello@myjpeg.jp</a></p>
-        <p>© myjpeg.jp — please don't repost without asking.</p>
+        <p>© myjpeg.jp<br>(please don't repost without asking)</p>
       `,
     },
   ],
