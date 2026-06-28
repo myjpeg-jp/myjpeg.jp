@@ -283,7 +283,7 @@ function renderNav() {
   nav.innerHTML = `<div class="nav-inner">${parts.join("")}</div>`;
 
   nav.querySelectorAll("[data-view]").forEach(el =>
-    el.addEventListener("click", () => route(el.dataset.view))
+    el.addEventListener("click", () => go(el.dataset.view))
   );
 }
 
@@ -321,7 +321,7 @@ function renderOverview() {
     .join('<hr class="ov-divider">');
 
   overviewView.querySelectorAll("[data-view]").forEach(el =>
-    el.addEventListener("click", () => route(el.dataset.view))
+    el.addEventListener("click", () => go(el.dataset.view))
   );
   overviewView.querySelectorAll("[data-file]").forEach(el =>
     el.addEventListener("click", () => {
@@ -544,14 +544,23 @@ nav.addEventListener("click", e => {
   if (window.innerWidth <= MOBILE_BP && e.target.closest(".nav-item")) setMenu(false);
 });
 
-// 信号機ボタン → 赤: トップ(Overview) / 緑: 全作品(All Work)
-function jumpTo(view) {
-  route(view);
-  pagesScroll?.scrollTo({ top: 0 });
+// ── ハッシュルーティング（URL連動 + ブラウザの戻る/進む対応）──
+function viewFromHash() {
+  const h = decodeURIComponent(location.hash.replace(/^#/, ""));
+  return h || "overview";
+}
+// 画面遷移は URL（ハッシュ）を更新 → hashchange が route() を呼ぶ
+function go(view) {
+  const want = "#" + encodeURIComponent(view);
+  if (location.hash !== want) location.hash = want;  // 履歴に積まれる → 戻るで前の画面へ
+  else route(view);                                  // 同じ画面の再選択
   if (window.innerWidth <= MOBILE_BP) setMenu(false);
 }
-document.querySelector(".tl-red")?.addEventListener("click", () => jumpTo("overview"));
-document.querySelector(".tl-green")?.addEventListener("click", () => jumpTo(sections[0]?.allId || "all"));
+window.addEventListener("hashchange", () => route(viewFromHash()));
+
+// 信号機ボタン → 赤: トップ(Overview) / 緑: 全作品(All Work)
+document.querySelector(".tl-red")?.addEventListener("click", () => go("overview"));
+document.querySelector(".tl-green")?.addEventListener("click", () => go(sections[0]?.allId || "all"));
 
 // ═══════════════════════════════════════════════════════════
 //  FOOTER CLOCK  — realtime timestamp + timezone
@@ -591,5 +600,5 @@ tickClock();
   renderNav();
   renderOverview();
   syncSlider();
-  route("overview");                // ← 起動時の表示
+  route(viewFromHash());            // ← URL のハッシュに応じた初期表示（直リンク対応）
 })();
