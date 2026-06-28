@@ -17,11 +17,9 @@ const data = {
       name: "about me.rtf", type: "rtf", icon: "assets/TxtIcon.png",
       // body があるとクリックでポップアップ表示。テキストはここを編集すればOK。
       body: `
-        <p>Hello.</p>
-        <p>Thanks for stopping by.</p>
-        <p>Feel free to send me an email: <a href="mailto:hello@myjpeg.jp">hello@myjpeg.jp</a></p>
-        <p>Take care,</p>
-        <p>ヤマモト</p>
+        <p>my jpegs.<br>a personal documentary.</p>
+        <p>contact: <a href="mailto:hello@myjpeg.jp">hello@myjpeg.jp</a></p>
+        <p>© myjpeg.jp — please don't repost without asking.</p>
       `,
     },
   ],
