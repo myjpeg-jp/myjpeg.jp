@@ -3,6 +3,10 @@
 //  Cloudinary の Admin API でフォルダ＆画像を取得して JSON で返す。
 //  秘密鍵は Cloudflare の環境変数に保管（ブラウザには出ない）。
 //
+//  2モード（初回ロードを軽くするため画像は遅延取得）:
+//    GET /api/gallery            → 構成だけ（セクション＋フォルダ名＋色ラベル）
+//    GET /api/gallery?folder=ID  → そのフォルダの中の画像だけ
+//
 //  構成（Cloudinary 側）:
 //    ルート直下のフォルダ = セクション（例: Selected Work / Experiments / iPhone Photo）
 //      その中のサブフォルダ = ギャラリーのフォルダ（サイドバーに出る）
@@ -28,7 +32,7 @@ function pickMarker(tags, prefix) {
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const displayName = (s) => s.replace(/^\d+[\s._-]+/, "");   // 先頭の "01 " 等を除去
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ env, request }) {
   const cloud = env.CLD_CLOUD;
   if (!cloud || !env.CLD_KEY || !env.CLD_SECRET) {
     return json({ error: "Missing CLD_CLOUD / CLD_KEY / CLD_SECRET env vars" }, 500);
@@ -39,6 +43,16 @@ export async function onRequestGet({ env }) {
       headers: { Authorization: auth },
     });
     if (!r.ok) throw new Error(`${path} → ${r.status}`);
+    return r.json();
+  };
+  // Admin Search API（POST）— fm-* タグの付いた画像をまとめて取得して色ラベルを引くのに使用
+  const search = async (expression) => {
+    const r = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/resources/search`, {
+      method: "POST",
+      headers: { Authorization: auth, "content-type": "application/json" },
+      body: JSON.stringify({ expression, max_results: 500, with_field: ["tags"] }),
+    });
+    if (!r.ok) throw new Error(`search → ${r.status}`);
     return r.json();
   };
 
@@ -65,7 +79,32 @@ export async function onRequestGet({ env }) {
     );
   }
 
+  // ── モード2: ?folder=ID → そのフォルダの画像だけ返す（フォルダを開いた時）──
+  const folderId = new URL(request.url).searchParams.get("folder");
+  if (folderId) {
+    try {
+      const resources = await listImages(folderId);
+      return json({ images: resources.map(buildImage) }, 200, "public, max-age=60");
+    } catch (e) {
+      return json({ error: String((e && e.message) || e) }, 500);
+    }
+  }
+
+  // ── モード1: 構成だけ返す（セクション＋フォルダ名＋色ラベル）──
   try {
+    // フォルダの色ラベル（fm-*）を1回の検索でまとめて取得 → folderPath -> marker
+    const markerByFolder = {};
+    try {
+      const expr = COLORS.map((c) => `tags=fm-${c}`).join(" OR ");
+      const sr = await search(expr);
+      for (const r of sr.resources || []) {
+        const m = pickMarker(r.tags, "fm");
+        if (!m) continue;
+        const fp = r.asset_folder || r.public_id.split("/").slice(0, -1).join("/");
+        if (fp && markerByFolder[fp] == null) markerByFolder[fp] = m;
+      }
+    } catch { /* 検索失敗時は色ラベルなしで続行 */ }
+
     // ルート直下のフォルダ = セクション
     const root = await get("folders").catch(() => ({ folders: [] }));
     const sectionDirs = (root.folders || []).sort((a, b) =>
@@ -77,23 +116,14 @@ export async function onRequestGet({ env }) {
       const label = displayName(secDir.name);
       const sub = await get(`folders/${encodeURIComponent(secDir.path)}`).catch(() => ({ folders: [] }));
 
-      const folders = [];
-      for (const f of (sub.folders || []).sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { numeric: true })
-      )) {
-        const resources = await listImages(f.path);
-        let folderMarker = null;
-        for (const r of resources) {
-          const m = pickMarker(r.tags, "fm");
-          if (m) { folderMarker = m; break; }
-        }
-        folders.push({
+      const folders = (sub.folders || [])
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .map((f) => ({
           id: f.path,
           name: displayName(f.name),
-          marker: folderMarker,
-          images: resources.map(buildImage),
-        });
-      }
+          marker: markerByFolder[f.path] || null,
+          images: [],                       // 画像はフォルダを開いた時に取得
+        }));
 
       sections.push({
         id: slug(secDir.name),

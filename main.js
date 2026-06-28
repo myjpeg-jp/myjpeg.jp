@@ -233,6 +233,26 @@ function findFolder(id) {
 }
 const sectionByAllId = (allId) => sections.find(s => s.allId === allId);
 
+// フォルダの中身（画像）は「開いた時」に取得する（初回ロードを軽くするため）
+const loadedFolders = new Set();
+async function ensureFolderImages(folder) {
+  if (!folder) return [];
+  // 既に取得済み / フォールバックで画像を持っている場合はそのまま
+  if (loadedFolders.has(folder.id) || (folder.images && folder.images.length)) {
+    loadedFolders.add(folder.id);
+    return folder.images || [];
+  }
+  try {
+    const r = await fetch(`/api/gallery?folder=${encodeURIComponent(folder.id)}`, { cache: "no-cache" });
+    const j = await r.json();
+    folder.images = Array.isArray(j.images) ? j.images : [];
+  } catch {
+    folder.images = folder.images || [];
+  }
+  loadedFolders.add(folder.id);
+  return folder.images;
+}
+
 // ═══════════════════════════════════════════════════════════
 //  SIDEBAR
 // ═══════════════════════════════════════════════════════════
@@ -428,7 +448,9 @@ function showImages() {
   gridSlider.classList.remove("hidden");
 }
 
-function route(view) {
+let routeSeq = 0;
+async function route(view) {
+  const seq = ++routeSeq;
   setActive(view);
 
   if (view === "overview") { showOverview(); pagesScroll?.scrollTo({ top: 0 }); return; }
@@ -436,14 +458,22 @@ function route(view) {
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
 
-  let imgs = [];
-  const sec = sectionByAllId(view);              // "all" / "all-exp" → セクション集約
-  if (sec) imgs = sec.folders.flatMap(f => f.images);
+  // 対象フォルダを決める（All ○○ はセクション内の全フォルダを集約）
+  let folders = [];
+  const sec = sectionByAllId(view);
+  if (sec) folders = sec.folders;
   else if (view.startsWith("folder:")) {
     const f = findFolder(view.slice(7));
-    imgs = f ? f.images : [];
+    folders = f ? [f] : [];
   }
-  renderImages(imgs);
+
+  // 未取得のフォルダがあれば、取得中は前のフォルダの画像を残さない
+  const needFetch = folders.some(f => !loadedFolders.has(f.id) && !(f.images && f.images.length));
+  if (needFetch) imageView.innerHTML = "";
+
+  const arrays = await Promise.all(folders.map(ensureFolderImages));
+  if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
+  renderImages(arrays.flat());
 }
 
 // ═══════════════════════════════════════════════════════════
