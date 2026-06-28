@@ -395,11 +395,13 @@ html, body {
   object-fit: contain;
   border-radius: 0;                       /* 角丸なし */
   box-shadow: 0 14px 50px var(--img-shadow);
+  transform: scale(0.93);
+  opacity: 0;
   transition: transform 0.46s var(--ease-out), opacity 0.46s var(--ease-out);
 }
-/* 開く時に少し拡大しながらフェードイン */
-.lightbox .lb-img { transform: scale(0.93); opacity: 0; }
-.lightbox.open .lb-img { transform: scale(1); opacity: 1; }
+/* 新しい画像が用意できてから .shown を付けて拡大フェードイン
+   （前の画像がチラ見えするのを防ぐ） */
+.lb-img.shown { transform: scale(1); opacity: 1; }
 .lb-caption {
   font-size: 0.8125rem;         /* HIG Footnote · 13pt */
   line-height: 1.3846;

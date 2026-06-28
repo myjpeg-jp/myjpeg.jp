@@ -503,11 +503,22 @@ function setLbImage(i) {
 }
 function openLightbox(i) {
   if (!lbImages.length) return;
-  // 直前のステップで付いたインラインスタイルをクリア → CSS のスケールインを効かせる
-  lbImg.style.transition = lbImg.style.transform = lbImg.style.opacity = "";
-  setLbImage(i);
+  // 前の画像を「フェードさせず即座に」隠す（A→閉じる→B でAがチラ見えするのを防ぐ）
+  lbImg.style.transition = "none";
+  lbImg.classList.remove("shown");
+  lbImg.style.transform = lbImg.style.opacity = "";   // インライン解除 → base（scale .93 / opacity 0）
+  void lbImg.offsetWidth;                              // 反映
+  setLbImage(i);                                       // 新しい src（読み込み開始）
+  lbImg.style.transition = "";                         // CSS の transition に戻す
   lightbox.classList.remove("hidden");
-  requestAnimationFrame(() => lightbox.classList.add("open"));
+  requestAnimationFrame(() => lightbox.classList.add("open"));   // オーバーレイは即フェードイン
+  // 新しい画像が表示可能になってから画像をフェードイン
+  const show = () => requestAnimationFrame(() => lbImg.classList.add("shown"));
+  if (lbImg.complete && lbImg.naturalWidth) show();
+  else {
+    lbImg.addEventListener("load", show, { once: true });
+    lbImg.addEventListener("error", show, { once: true });
+  }
 }
 function closeLightbox() { lightbox.classList.remove("open"); }
 // 前後送り：方向に合わせて左右へスライド＋フェード
@@ -520,13 +531,21 @@ function lbStep(d) {
   lbImg.style.transform = `translateX(${-dir * DIST}px)`;
   lbImg.style.opacity = "0";
   setTimeout(() => {
-    setLbImage(lbIndex + d);
-    lbImg.style.transition = "none";
-    lbImg.style.transform = `translateX(${dir * DIST}px)`;   // 反対側から入ってくる
-    void lbImg.offsetWidth;                                   // reflow を強制
-    lbImg.style.transition = "transform 0.42s var(--ease-out), opacity 0.36s ease-out";
-    lbImg.style.transform = "translateX(0)";
-    lbImg.style.opacity = "1";
+    setLbImage(lbIndex + d);                                  // 新しい src（読み込み開始）
+    const slideIn = () => {
+      lbImg.style.transition = "none";
+      lbImg.style.transform = `translateX(${dir * DIST}px)`;  // 反対側から入ってくる
+      void lbImg.offsetWidth;                                 // reflow を強制
+      lbImg.style.transition = "transform 0.42s var(--ease-out), opacity 0.36s ease-out";
+      lbImg.style.transform = "translateX(0)";
+      lbImg.style.opacity = "1";
+    };
+    // 新しい画像が用意できてからスライドイン（前の画像のチラ見え防止）
+    if (lbImg.complete && lbImg.naturalWidth) slideIn();
+    else {
+      lbImg.addEventListener("load", slideIn, { once: true });
+      lbImg.addEventListener("error", slideIn, { once: true });
+    }
   }, OUT);
 }
 
