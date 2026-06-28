@@ -578,26 +578,31 @@ function applyCols(c) {
   const setVar = () => document.documentElement.style.setProperty("--img-cols", c);
   if (reduceMotion || imageView.classList.contains("hidden")) { setVar(); return; }
 
+  // アニメ対象: サムネ画像（拡縮あり）＋ キャプション（移動のみで歪ませず追尾）
   const icons = [...imageView.querySelectorAll(".photo-cell .cell-icon")];
-  if (!icons.length) { setVar(); return; }
+  const movers = [...icons, ...imageView.querySelectorAll(".photo-cell .cell-caption")];
+  if (!movers.length) { setVar(); return; }
+  const scaled = new Set(icons);
 
   // First: 現在の見た目（進行中アニメの途中位置も含めて測る → 連続ドラッグでも途切れない）
-  const first = icons.map(el => el.getBoundingClientRect());
+  const first = movers.map(el => el.getBoundingClientRect());
   // 変形を解除して新レイアウトを確定 → Last を測る
-  icons.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
+  movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
-  const last = icons.map(el => el.getBoundingClientRect());
+  const last = movers.map(el => el.getBoundingClientRect());
   // Invert: いったん元の見た目の位置・サイズへ瞬間移動
-  icons.forEach((el, i) => {
+  movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
     el.style.transformOrigin = "top left";
-    el.style.transform =
-      `translate(${f.left - l.left}px, ${f.top - l.top}px) scale(${f.width / l.width}, ${f.height / l.height})`;
+    const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
+    el.style.transform = scaled.has(el)
+      ? `${move} scale(${f.width / l.width}, ${f.height / l.height})`   // 画像は拡縮＋移動
+      : move;                                                           // キャプションは移動のみ
   });
   // Play: 次フレームで本来の位置・サイズへスーッと戻す
   requestAnimationFrame(() => {
-    icons.forEach(el => {
+    movers.forEach(el => {
       el.style.transition = "transform 0.42s var(--ease)";
       el.style.transform = "";
     });
