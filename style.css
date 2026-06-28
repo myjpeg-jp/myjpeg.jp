@@ -583,9 +583,9 @@ html, body {
     flex: 1;              /* fill remaining screen height */
     min-height: 0;
   }
-  .pages-scroll { padding: 24px 24px 24px; }
-  /* iOS Safari: body を可視領域に固定し、ページ自体のスクロールを止める。
-     これでフッターが下部バーの裏に押し出されない（内部だけスクロール）。 */
+  .pages-scroll { padding: 24px 24px 80px; }   /* 下部に浮かせたフッター分の余白 */
+
+  /* iOS Safari: body を可視領域に固定し、ページ自体のスクロールを止める（内部だけスクロール）。 */
   html { height: 100%; }
   body {
     position: fixed;
@@ -597,6 +597,21 @@ html, body {
     flex-direction: column;
     height: 100%;           /* 固定された body の可視領域いっぱい */
     overflow: hidden;
+  }
+
+  /* iOS は position:fixed 要素を下部バーの“上”に表示する。
+     フッター（＋スライダー）を浮かせて常時見えるようにする。 */
+  .main-footer {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 60;
+    height: 46px;
+    background: var(--main-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.14);
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { right: 14px; }
