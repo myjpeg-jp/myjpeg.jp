@@ -65,16 +65,30 @@ export async function onRequestGet({ env, request }) {
   });
 
   async function listImages(assetFolder) {
-    let res = await get(
-      `resources/by_asset_folder?asset_folder=${encodeURIComponent(assetFolder)}&tags=true&max_results=100`
-    ).catch(() => ({ resources: [] }));
-    if (!res.resources || !res.resources.length) {
-      // fixed-folder アカウント用フォールバック（public_id 前方一致）
-      res = await get(
+    let resources = [];
+    // ① 検索API（dynamic / fixed どちらのフォルダ構成でも確実に当たる。マーカー取得と同方式）
+    try {
+      const esc = assetFolder.replace(/"/g, '\\"');
+      const sr = await search(`asset_folder="${esc}" AND resource_type:image`);
+      resources = sr.resources || [];
+    } catch { /* 検索失敗時は下のフォールバックへ */ }
+
+    // ② フォールバック: 旧来の by_asset_folder
+    if (!resources.length) {
+      const res = await get(
+        `resources/by_asset_folder?asset_folder=${encodeURIComponent(assetFolder)}&tags=true&max_results=100`
+      ).catch(() => ({ resources: [] }));
+      resources = res.resources || [];
+    }
+    // ③ フォールバック: public_id 前方一致（fixed-folder アカウント）
+    if (!resources.length) {
+      const res = await get(
         `resources/image/upload?prefix=${encodeURIComponent(assetFolder + "/")}&tags=true&max_results=100`
       ).catch(() => ({ resources: [] }));
+      resources = res.resources || [];
     }
-    return (res.resources || []).sort((a, b) =>
+
+    return resources.sort((a, b) =>
       a.public_id.localeCompare(b.public_id, undefined, { numeric: true })
     );
   }
