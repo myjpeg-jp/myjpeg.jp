@@ -583,7 +583,7 @@ html, body {
     position: static;
     inset: auto;
     margin: 10px;          /* サイト全体のマージン（上下左右） */
-    margin-top: 14px;
+    margin-top: 12px;
     margin-bottom: 4px;
     border-radius: 28px;
     flex: 1;              /* fill remaining screen height */
