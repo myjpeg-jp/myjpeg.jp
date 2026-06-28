@@ -92,7 +92,20 @@ export async function onRequestGet({ env, request }) {
 
   // ── モード1: 構成だけ返す（セクション＋フォルダ名＋色ラベル）──
   try {
-    // フォルダの色ラベル（fm-*）を1回の検索でまとめて取得 → folderPath -> marker
+    // ルート直下のフォルダ = セクション（最重要）。
+    // ここが一時的に失敗した時に「空の構成」を返すと、それがキャッシュされて
+    // フォルダが消えたまま固定化してしまう → 失敗時はエラー扱いにしてキャッシュさせない。
+    let root;
+    try {
+      root = await get("folders");
+    } catch (e) {
+      return json({ error: "folders: " + String((e && e.message) || e) }, 502); // no-store
+    }
+    const sectionDirs = (root.folders || []).sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true })
+    );
+
+    // フォルダの色ラベル（fm-*）を1回の検索でまとめて取得（任意・失敗しても続行）
     const markerByFolder = {};
     try {
       const expr = COLORS.map((c) => `tags=fm-${c}`).join(" OR ");
@@ -105,16 +118,12 @@ export async function onRequestGet({ env, request }) {
       }
     } catch { /* 検索失敗時は色ラベルなしで続行 */ }
 
-    // ルート直下のフォルダ = セクション
-    const root = await get("folders").catch(() => ({ folders: [] }));
-    const sectionDirs = (root.folders || []).sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true })
-    );
-
+    let degraded = false;   // サブフォルダ取得に一部でも失敗したらキャッシュしない
     const sections = [];
     for (const secDir of sectionDirs) {
       const label = displayName(secDir.name);
-      const sub = await get(`folders/${encodeURIComponent(secDir.path)}`).catch(() => ({ folders: [] }));
+      const sub = await get(`folders/${encodeURIComponent(secDir.path)}`)
+        .catch(() => { degraded = true; return { folders: [] }; });
 
       const folders = (sub.folders || [])
         .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
@@ -134,7 +143,9 @@ export async function onRequestGet({ env, request }) {
       });
     }
 
-    return json({ sections }, 200, "public, max-age=60");
+    // 中身が揃っている時だけキャッシュ（一時的な取得失敗を固定化させない）
+    const cache = (!degraded && sections.length) ? "public, max-age=60" : "no-store";
+    return json({ sections }, 200, cache);
   } catch (e) {
     return json({ error: String((e && e.message) || e) }, 500);
   }
