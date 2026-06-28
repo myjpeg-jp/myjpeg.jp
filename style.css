@@ -320,8 +320,6 @@ html, body {
   background-position: center;          /* blur-up プレースホルダー */
   transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
 }
-/* タップで軽く沈む（ホバーエフェクトは無し） */
-.photo-cell:active .cell-icon { transform: scale(0.98); transition-duration: 0.08s; }
 .photo-cell .cell-icon img {
   display: block;
   width: 100%;
