@@ -587,7 +587,7 @@ html, body {
   .content-wrap {
     flex-direction: column;
     height: 100vh;
-    height: 100dvh;       /* fixed → card fills the screen, scrolls inside */
+    height: 100svh;       /* small viewport = ツールバー表示時の高さ。フッターが下部バーに隠れない */
     overflow: hidden;
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
