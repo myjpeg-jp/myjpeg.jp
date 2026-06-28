@@ -295,14 +295,19 @@ html, body {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  background-color: var(--hover-bg);   /* 読み込み前のスケルトン色 */
+  background-size: cover;
+  background-position: center;          /* blur-up プレースホルダー */
 }
 .photo-cell .cell-icon img {
   display: block;
   width: 100%;
   height: auto;
-  transition: opacity 0.15s ease;
+  opacity: 0;                           /* 読み込み完了でフェードイン */
+  transition: opacity 0.4s ease;
 }
-.photo-cell:hover .cell-icon img { opacity: 0.9; }
+.photo-cell .cell-icon img.is-loaded { opacity: 1; }
+.photo-cell:hover .cell-icon img.is-loaded { opacity: 0.9; }
 
 /* Caption */
 .cell-caption {

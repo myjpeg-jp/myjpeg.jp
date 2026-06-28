@@ -46,6 +46,8 @@ export async function onRequestGet({ env }) {
     url: `https://res.cloudinary.com/${cloud}/image/upload/f_auto,q_auto/v${r.version}/${r.public_id}.${r.format}`,
     name: r.public_id.split("/").pop() + "." + r.format,
     marker: pickMarker(r.tags, "m"),
+    w: r.width,
+    h: r.height,
   });
 
   async function listImages(assetFolder) {

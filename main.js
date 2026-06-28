@@ -361,6 +361,19 @@ let lbIndex  = 0;
 // Cloudinary URL に幅リサイズを差し込む（c_limit = 元より大きくはしない）
 const sized = (url, w) => url.replace("/f_auto,q_auto/", `/f_auto,q_auto,c_limit,w_${w}/`);
 
+// 読み込み前にスペース確保するためのアスペクト比（w/h、なければURL末尾の寸法から推定）
+function imgAspect(img) {
+  if (img.w && img.h) return `${img.w}/${img.h}`;
+  const m = String(img.url).match(/\/(\d+)\/(\d+)(?:[?#]|$)/);
+  return m ? `${m[1]}/${m[2]}` : "";
+}
+// 低画質ブラー（blur-up）用の極小URL。Cloudinary 配信URLのみ。
+function blurURL(url) {
+  return url.includes("/f_auto,q_auto/")
+    ? url.replace("/f_auto,q_auto/", "/w_24,e_blur:1200,q_30,f_auto/")
+    : "";
+}
+
 // サムネ解像度は「1カラム表示」を前提に固定（＝表示領域いっぱいの幅 × DPR、上限2400）。
 // カラム数に依存しないので、スライダーで変えても再読み込みは起きない。
 function thumbW() {
@@ -372,15 +385,27 @@ function thumbW() {
 function renderImages(images) {
   lbImages = images;
   const tw = thumbW();
-  imageView.innerHTML = images.map(img => `
+  imageView.innerHTML = images.map(img => {
+    const ar = imgAspect(img);
+    const blur = blurURL(img.url);
+    const style =
+      (ar ? `aspect-ratio:${ar};` : "") +
+      (blur ? `background-image:url('${blur}');` : "");
+    return `
     <div class="cell photo-cell" title="${img.name || ""}">
-      <div class="cell-icon"><img src="${sized(img.url, tw)}" loading="lazy" alt="${img.name || ""}"></div>
+      <div class="cell-icon"${style ? ` style="${style}"` : ""}>
+        <img src="${sized(img.url, tw)}" loading="lazy" alt="${img.name || ""}">
+      </div>
       <span class="cell-caption">${dotSpan(img.marker)}${img.name || ""}</span>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
-  imageView.querySelectorAll(".photo-cell img").forEach((im, i) =>
-    im.addEventListener("click", () => openLightbox(i))
-  );
+  imageView.querySelectorAll(".photo-cell img").forEach((im, i) => {
+    im.addEventListener("click", () => openLightbox(i));
+    // 読み込み完了でフェードイン（キャッシュ済みは即時）
+    if (im.complete && im.naturalWidth) im.classList.add("is-loaded");
+    else im.addEventListener("load", () => im.classList.add("is-loaded"), { once: true });
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
