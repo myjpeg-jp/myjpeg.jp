@@ -526,7 +526,7 @@ html, body {
 
   /* Clean header row */
   .titlebar {
-    height: 54px;
+    height: 44px;
     margin-bottom: 0;
     gap: 12px;
     align-items: center;
