@@ -531,10 +531,9 @@ function openLightbox(i) {
   setLbImage(i);                                       // 新しい src（読み込み開始）
   lbImg.style.transition = "";                         // CSS の transition に戻す
   lightbox.classList.remove("hidden");
-  requestAnimationFrame(() => {
-    lightbox.classList.add("open");
-    requestAnimationFrame(() => lbClose.focus());   // 可視化が反映されてからフォーカス
-  });
+  requestAnimationFrame(() => lightbox.classList.add("open"));
+  // 自動フォーカスはしない（開いた瞬間に枠が出るのを防ぐ）。
+  // キーボードで Tab した時だけ下の keydown ハンドラが枠付きでフォーカスを入れる。
   // 新しい画像が表示可能になってから画像をフェードイン
   const show = () => requestAnimationFrame(() => lbImg.classList.add("shown"));
   if (lbImg.complete && lbImg.naturalWidth) show();
