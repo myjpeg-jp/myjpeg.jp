@@ -518,9 +518,9 @@ html, body {
     position: static;
     inset: auto;
     width: auto;
-    margin: calc(12px + env(safe-area-inset-top, 0px)) 12px 0;
+    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
     border-radius: 28px;
-    padding: 0 18px;
+    padding: 0 14px;
   }
   .sidebar.open { padding-bottom: 14px; }
 
@@ -582,7 +582,7 @@ html, body {
   .pages {
     position: static;
     inset: auto;
-    margin: 12px;          /* 下も12pxに揃える（env のホームインジケーター分を外す） */
+    margin: 10px;          /* サイト全体のマージン（上下左右） */
     border-radius: 28px;
     flex: 1;              /* fill remaining screen height */
     min-height: 0;
