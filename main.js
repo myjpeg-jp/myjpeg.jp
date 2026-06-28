@@ -208,6 +208,12 @@ function playFadeIn(el) {
   el.classList.add("view-in");
 }
 
+// HTML特殊文字をエスケープ（フォルダ名/画像名に < & " 等が入っても崩れない）
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 // ═══════════════════════════════════════════════════════════
 //  GALLERY DATA  ← Cloudinary（/api/gallery）から取得
 //  失敗時（ローカルプレビュー等）は data.folders にフォールバック
@@ -282,10 +288,10 @@ function renderNav() {
     if (!s.folders.length) continue;
     parts.push(`
       <div class="nav-section">
-        <p class="nav-label">${s.label}</p>
+        <p class="nav-label">${esc(s.label)}</p>
         <ul class="nav-list">
           <li class="nav-item" data-view="${s.allId}">
-            ${navFolderGlyph()}<span class="label">${s.allLabel}</span>
+            ${navFolderGlyph()}<span class="label">${esc(s.allLabel)}</span>
           </li>
           ${s.folders.map(navItem).join("")}
         </ul>
@@ -316,8 +322,8 @@ function renderNav() {
 }
 
 function navItem(f) {
-  return `<li class="nav-item" data-view="folder:${f.id}">
-    ${navFolderGlyph()}<span class="label">${f.name}</span>${dotSpan(f.marker)}
+  return `<li class="nav-item" data-view="folder:${esc(f.id)}">
+    ${navFolderGlyph()}<span class="label">${esc(f.name)}</span>${dotSpan(f.marker)}
   </li>`;
 }
 
@@ -326,15 +332,15 @@ function navItem(f) {
 // ═══════════════════════════════════════════════════════════
 function renderOverview() {
   const fileCell = file => `
-    <div class="cell file-cell" data-file="${file.name}" title="${file.name}">
+    <div class="cell file-cell" data-file="${esc(file.name)}" title="${esc(file.name)}">
       <div class="cell-icon">${fileIcon(file)}</div>
-      <span class="cell-caption">${file.name}${file.url ? ' <span class="ext-arrow">&#8599;</span>' : ""}</span>
+      <span class="cell-caption">${esc(file.name)}${file.url ? ' <span class="ext-arrow">&#8599;</span>' : ""}</span>
     </div>`;
 
   const folderCell = f => `
-    <div class="cell folder-cell" data-view="folder:${f.id}" title="${f.name}">
+    <div class="cell folder-cell" data-view="folder:${esc(f.id)}" title="${esc(f.name)}">
       <div class="cell-icon">${folderIcon()}</div>
-      <span class="cell-caption">${dotSpan(f.marker)}${f.name}</span>
+      <span class="cell-caption">${dotSpan(f.marker)}${esc(f.name)}</span>
     </div>`;
 
   // One row-group per sidebar section, separated by a divider
@@ -412,6 +418,10 @@ function thumbW() {
 
 function renderImages(images) {
   lbImages = images;
+  if (!images.length) {            // 空フォルダ
+    imageView.innerHTML = `<p class="empty-note">No images</p>`;
+    return;
+  }
   const tw = thumbW();
   imageView.innerHTML = images.map(img => {
     const ar = imgAspect(img);
@@ -419,12 +429,13 @@ function renderImages(images) {
     const style =
       (ar ? `aspect-ratio:${ar};` : "") +
       (blur ? `background-image:url('${blur}');` : "");
+    const name = esc(img.name || "");
     return `
-    <div class="cell photo-cell" title="${img.name || ""}">
+    <div class="cell photo-cell" title="${name}">
       <div class="cell-icon"${style ? ` style="${style}"` : ""}>
-        <img src="${sized(img.url, tw)}" loading="lazy" alt="${img.name || ""}">
+        <img src="${sized(img.url, tw)}" loading="lazy" alt="${name}">
       </div>
-      <span class="cell-caption">${dotSpan(img.marker)}${img.name || ""}</span>
+      <span class="cell-caption">${dotSpan(img.marker)}${name}</span>
     </div>`;
   }).join("");
 
@@ -498,9 +509,20 @@ function setLbImage(i) {
   const single = lbImages.length <= 1;   // 1枚しかなければ矢印を隠す
   lbPrev.classList.toggle("hidden", single);
   lbNext.classList.toggle("hidden", single);
+  preloadAdjacent();                     // 次/前を先読みして送りを速く
 }
+// 次・前の画像をブラウザキャッシュに先読み
+function preloadAdjacent() {
+  if (lbImages.length <= 1) return;
+  for (const d of [1, -1]) {
+    const n = lbImages[(lbIndex + d + lbImages.length) % lbImages.length];
+    if (n && n.url) { const im = new Image(); im.src = n.url; }
+  }
+}
+let lbReturnFocus = null;                 // 閉じた後にフォーカスを戻す先
 function openLightbox(i) {
   if (!lbImages.length) return;
+  lbReturnFocus = document.activeElement; // 開く前のフォーカス位置を記憶
   // 前の画像を「フェードさせず即座に」隠す（A→閉じる→B でAがチラ見えするのを防ぐ）
   lbImg.style.transition = "none";
   lbImg.classList.remove("shown");
@@ -509,7 +531,10 @@ function openLightbox(i) {
   setLbImage(i);                                       // 新しい src（読み込み開始）
   lbImg.style.transition = "";                         // CSS の transition に戻す
   lightbox.classList.remove("hidden");
-  requestAnimationFrame(() => lightbox.classList.add("open"));   // オーバーレイは即フェードイン
+  requestAnimationFrame(() => {
+    lightbox.classList.add("open");
+    requestAnimationFrame(() => lbClose.focus());   // 可視化が反映されてからフォーカス
+  });
   // 新しい画像が表示可能になってから画像をフェードイン
   const show = () => requestAnimationFrame(() => lbImg.classList.add("shown"));
   if (lbImg.complete && lbImg.naturalWidth) show();
@@ -518,7 +543,10 @@ function openLightbox(i) {
     lbImg.addEventListener("error", show, { once: true });
   }
 }
-function closeLightbox() { lightbox.classList.remove("open"); }
+function closeLightbox() {
+  lightbox.classList.remove("open");
+  if (lbReturnFocus && lbReturnFocus.focus) lbReturnFocus.focus();  // 元の位置へフォーカスを戻す
+}
 // 前後送り：方向に合わせて左右へスライド＋フェード
 function lbStep(d) {
   if (lbImages.length <= 1) return;
@@ -557,6 +585,15 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") closeLightbox();
   else if (e.key === "ArrowLeft") lbStep(-1);
   else if (e.key === "ArrowRight") lbStep(1);
+  else if (e.key === "Tab") {
+    // フォーカスをライトボックス内のボタンに閉じ込める
+    const f = [lbClose, lbPrev, lbNext].filter(b => b && !b.classList.contains("hidden"));
+    if (!f.length) return;
+    e.preventDefault();
+    const i = f.indexOf(document.activeElement);
+    const n = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i >= f.length - 1 ? 0 : i + 1);
+    f[n].focus();
+  }
 });
 
 // Swipe navigation (mobile) — left = next, right = prev

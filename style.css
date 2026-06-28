@@ -267,6 +267,16 @@ html, body {
   transition: opacity 0.2s ease;   /* スライダー操作時のクロスフェード */
 }
 
+/* 空フォルダの控えめな表示 */
+.empty-note {
+  grid-column: 1 / -1;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
 /* ページ遷移（Overview ⇄ フォルダ）のフェードイン（上下の移動なし・フェードのみ） */
 .view-in { animation: viewIn 0.28s var(--ease) both; }
 @keyframes viewIn {
