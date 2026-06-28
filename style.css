@@ -514,7 +514,7 @@ html, body {
     position: static;
     inset: auto;
     width: auto;
-    margin: 12px 12px 0;
+    margin: calc(12px + env(safe-area-inset-top, 0px)) 12px 0;
     border-radius: 28px;
     padding: 0 18px;
   }
@@ -578,7 +578,7 @@ html, body {
   .pages {
     position: static;
     inset: auto;
-    margin: 12px;
+    margin: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
     border-radius: 28px;
     flex: 1;              /* fill remaining screen height */
     min-height: 0;
