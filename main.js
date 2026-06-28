@@ -190,16 +190,6 @@ const gsRange      = document.getElementById("gs-range");
 const sidebar      = document.querySelector(".sidebar");
 const menuToggle   = document.getElementById("menu-toggle");
 
-// モバイル: 実際の表示領域の高さを CSS 変数に反映（iOS Safari の下部バーを除外）
-function setAppHeight() {
-  const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  document.documentElement.style.setProperty("--app-height", Math.round(h) + "px");
-}
-setAppHeight();
-window.visualViewport?.addEventListener("resize", setAppHeight);
-window.addEventListener("orientationchange", () => setTimeout(setAppHeight, 250));
-window.addEventListener("load", setAppHeight);
-
 // ═══════════════════════════════════════════════════════════
 //  GALLERY DATA  ← Cloudinary（/api/gallery）から取得
 //  失敗時（ローカルプレビュー等）は data.folders にフォールバック

@@ -584,11 +584,18 @@ html, body {
     min-height: 0;
   }
   .pages-scroll { padding: 24px 24px 24px; }
+  /* iOS Safari: body を可視領域に固定し、ページ自体のスクロールを止める。
+     これでフッターが下部バーの裏に押し出されない（内部だけスクロール）。 */
+  html { height: 100%; }
+  body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    overflow: hidden;
+  }
   .content-wrap {
     flex-direction: column;
-    height: 100vh;
-    height: 100svh;
-    height: var(--app-height, 100svh);   /* JSが測った実表示高さ（下部バー除外）を優先 */
+    height: 100%;           /* 固定された body の可視領域いっぱい */
     overflow: hidden;
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
