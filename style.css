@@ -610,13 +610,15 @@ html, body {
   .nav-item { border-radius: 13px; }
   .photo-cell .cell-icon { border-radius: 12px; }
 
-  /* wider overview columns so folder names fit on one line */
-  .ov-group { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 20px 0px; }
+  /* Overview: 3 columns on mobile */
+  .ov-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 6px; }
 
   .ov-divider { margin: 24px 0; }
   .cell { gap: 10px; }                    /* photo thumbnails keep their spacing */
   .folder-cell, .file-cell { gap: 4px; }  /* Overview only: icon ↔ title closer */
-  .cell-icon img.icon-png { width: 112px; height: 112px; }  /* one size up on mobile */
+  .cell-icon img.icon-png { width: clamp(68px, 23vw, 100px); height: auto; }  /* 3-up, slight inset */
+  .folder-cell .cell-icon svg,
+  .file-cell   .cell-icon svg { width: clamp(62px, 21vw, 92px); height: auto; }
 
   /* preview: hide arrows, navigate by swipe instead */
   .lb-nav { display: none; }
