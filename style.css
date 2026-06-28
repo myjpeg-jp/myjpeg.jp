@@ -591,8 +591,9 @@ html, body {
      （高さを 100%/100vh 等で固定すると追従が上書きされ裏に隠れてしまう） */
   .content-wrap {
     position: fixed;
-    inset: 0;
-    min-height: 0;        /* ★ base の min-height:100vh を打ち消す（これが裏まで伸ばしていた） */
+    top: 0; left: 0; right: 0;
+    height: var(--vvh, 100%);   /* JSが実測した可視領域の高さ（ツールバー除外）にぴったり合わせる */
+    min-height: 0;              /* base の min-height:100vh を打ち消す */
     flex-direction: column;
     overflow: hidden;
   }
