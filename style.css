@@ -587,7 +587,8 @@ html, body {
   .content-wrap {
     flex-direction: column;
     height: 100vh;
-    height: 100svh;       /* small viewport = ツールバー表示時の高さ。フッターが下部バーに隠れない */
+    height: 100svh;
+    height: var(--app-height, 100svh);   /* JSが測った実表示高さ（下部バー除外）を優先 */
     overflow: hidden;
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
