@@ -15,6 +15,9 @@
   --sidebar-inset: 12px;
   --card-radius:   20px;
   --radius-item:   11px;
+  /* motion — Apple-like easing (iOS/macOS の余韻のあるイーズ) */
+  --ease:    cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   /* Apple system font (SF Pro via -apple-system; SF Text/Display optical split is automatic) */
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
           "Helvetica Neue", Helvetica, Arial, "Hiragino Sans",
@@ -261,6 +264,23 @@ html, body {
 /* Image view: thumbnails — column count driven by the slider */
 #image-view {
   grid-template-columns: repeat(var(--img-cols, 6), minmax(0, 1fr));
+  transition: opacity 0.2s ease;   /* スライダー操作時のクロスフェード */
+}
+
+/* ページ遷移（Overview ⇄ フォルダ）のフェードイン */
+.view-in { animation: viewIn 0.28s var(--ease) both; }
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* OS の「視差効果を減らす」設定を尊重 — アニメーションを無効化 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* ── Cell (folder, file, or photo) ── */
@@ -298,7 +318,11 @@ html, body {
   background-color: var(--hover-bg);   /* 読み込み前のスケルトン色 */
   background-size: cover;
   background-position: center;          /* blur-up プレースホルダー */
+  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
 }
+/* ホバーで微かに浮く / タップで軽く沈む */
+.photo-cell:hover .cell-icon { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.18); }
+.photo-cell:active .cell-icon { transform: scale(0.98); transition-duration: 0.08s; }
 .photo-cell .cell-icon img {
   display: block;
   width: 100%;
@@ -308,6 +332,10 @@ html, body {
 }
 .photo-cell .cell-icon img.is-loaded { opacity: 1; }
 .photo-cell:hover .cell-icon img.is-loaded { opacity: 0.9; }
+
+/* Overview のフォルダ/ファイルもタップで軽く沈む */
+.folder-cell .cell-icon, .file-cell .cell-icon { transition: transform 0.18s var(--ease); }
+.folder-cell:active .cell-icon, .file-cell:active .cell-icon { transform: scale(0.93); }
 
 /* Caption */
 .cell-caption {
@@ -348,8 +376,13 @@ html, body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease), visibility 0.3s var(--ease);
 }
-.lightbox.hidden { display: none !important; }
+.lightbox.open { opacity: 1; visibility: visible; pointer-events: auto; }
+.lightbox.hidden { display: none; }       /* 初期描画前のみ（JSで初回に外す） */
 
 .lb-figure {
   margin: 0;
@@ -364,7 +397,11 @@ html, body {
   object-fit: contain;
   border-radius: 0;                       /* 角丸なし */
   box-shadow: 0 14px 50px var(--img-shadow);
+  transition: transform 0.3s var(--ease), opacity 0.3s var(--ease);
 }
+/* 開く時に少し拡大しながらフェードイン */
+.lightbox .lb-img { transform: scale(0.96); opacity: 0; }
+.lightbox.open .lb-img { transform: scale(1); opacity: 1; }
 .lb-caption {
   font-size: 0.8125rem;         /* HIG Footnote · 13pt */
   line-height: 1.3846;

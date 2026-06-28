@@ -200,6 +200,16 @@ if (window.visualViewport) {
 window.addEventListener("orientationchange", () => setTimeout(setVVH, 300));
 window.addEventListener("load", setVVH);
 
+// OS の「視差効果を減らす」設定（true ならアニメーションを抑える）
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// ビューを差し替えた時にふわっとフェードインさせる
+function playFadeIn(el) {
+  if (reduceMotion || !el) return;
+  el.classList.remove("view-in");
+  void el.offsetWidth;            // reflow してアニメを再生し直す
+  el.classList.add("view-in");
+}
+
 // ═══════════════════════════════════════════════════════════
 //  GALLERY DATA  ← Cloudinary（/api/gallery）から取得
 //  失敗時（ローカルプレビュー等）は data.folders にフォールバック
@@ -453,7 +463,7 @@ async function route(view) {
   const seq = ++routeSeq;
   setActive(view);
 
-  if (view === "overview") { showOverview(); pagesScroll?.scrollTo({ top: 0 }); return; }
+  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); return; }
 
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
@@ -474,26 +484,50 @@ async function route(view) {
   const arrays = await Promise.all(folders.map(ensureFolderImages));
   if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
   renderImages(arrays.flat());
+  playFadeIn(imageView);
 }
 
 // ═══════════════════════════════════════════════════════════
 //  LIGHTBOX
 // ═══════════════════════════════════════════════════════════
-function openLightbox(i) {
-  if (!lbImages.length) return;
+// 画像とキャプション・矢印だけを差し替える（開閉アニメとは独立）
+function setLbImage(i) {
   lbIndex = (i + lbImages.length) % lbImages.length;
   const img = lbImages[lbIndex];
   lbImg.src = img.url;
   lbImg.alt = img.name || "";
   lbCaption.textContent = img.name || "";
-  // 1枚しかなければ矢印を隠す
-  const single = lbImages.length <= 1;
+  const single = lbImages.length <= 1;   // 1枚しかなければ矢印を隠す
   lbPrev.classList.toggle("hidden", single);
   lbNext.classList.toggle("hidden", single);
-  lightbox.classList.remove("hidden");
 }
-function closeLightbox() { lightbox.classList.add("hidden"); }
-function lbStep(d) { openLightbox(lbIndex + d); }
+function openLightbox(i) {
+  if (!lbImages.length) return;
+  // 直前のステップで付いたインラインスタイルをクリア → CSS のスケールインを効かせる
+  lbImg.style.transition = lbImg.style.transform = lbImg.style.opacity = "";
+  setLbImage(i);
+  lightbox.classList.remove("hidden");
+  requestAnimationFrame(() => lightbox.classList.add("open"));
+}
+function closeLightbox() { lightbox.classList.remove("open"); }
+// 前後送り：方向に合わせて左右へスライド＋フェード
+function lbStep(d) {
+  if (lbImages.length <= 1) return;
+  if (reduceMotion) { setLbImage(lbIndex + d); return; }
+  const dir = d > 0 ? 1 : -1;
+  lbImg.style.transition = "transform 0.16s ease-in, opacity 0.16s ease-in";
+  lbImg.style.transform = `translateX(${-dir * 36}px)`;
+  lbImg.style.opacity = "0";
+  setTimeout(() => {
+    setLbImage(lbIndex + d);
+    lbImg.style.transition = "none";
+    lbImg.style.transform = `translateX(${dir * 36}px)`;   // 反対側から入ってくる
+    void lbImg.offsetWidth;                                  // reflow を強制
+    lbImg.style.transition = "transform 0.24s cubic-bezier(0.32,0.72,0,1), opacity 0.24s ease-out";
+    lbImg.style.transform = "translateX(0)";
+    lbImg.style.opacity = "1";
+  }, 160);
+}
 
 lbClose.addEventListener("click", e => { e.stopPropagation(); closeLightbox(); });
 lbPrev.addEventListener("click", e => { e.stopPropagation(); lbStep(-1); });
@@ -501,7 +535,7 @@ lbNext.addEventListener("click", e => { e.stopPropagation(); lbStep(1); });
 lightbox.addEventListener("click", e => { if (e.target === lightbox) closeLightbox(); });
 
 document.addEventListener("keydown", e => {
-  if (lightbox.classList.contains("hidden")) return;
+  if (!lightbox.classList.contains("open")) return;
   if (e.key === "Escape") closeLightbox();
   else if (e.key === "ArrowLeft") lbStep(-1);
   else if (e.key === "ArrowRight") lbStep(1);
@@ -539,7 +573,14 @@ function currentCols() {
 }
 
 // 列数は :root に設定 → Overview・画像グリッド両方に効く
-function applyCols(c) { document.documentElement.style.setProperty("--img-cols", c); }
+function applyCols(c) {
+  document.documentElement.style.setProperty("--img-cols", c);
+  if (reduceMotion) return;
+  // 組み替えの瞬間を少しフェードさせて滑らかに（操作が止まると元の不透明度へ戻る）
+  imageView.style.opacity = "0.72";
+  clearTimeout(applyCols._t);
+  applyCols._t = setTimeout(() => { imageView.style.opacity = "1"; }, 140);
+}
 
 function syncSlider() {
   const mc = maxCols();
