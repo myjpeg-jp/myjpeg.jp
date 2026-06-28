@@ -644,10 +644,15 @@ function syncSlider() {
 
 gsRange.addEventListener("input", () => {
   const mc = maxCols();
-  // 連続値 → 最寄りのカラム数に丸める（つまみ自体は滑らかに動く）
+  // 連続値 → 最寄りのカラム数に丸める（ドラッグ中はつまみが滑らかに動く）
   const c = Math.min(Math.max(mc + 1 - Math.round(parseFloat(gsRange.value)), 1), mc);
   applyCols(c);
   lsSet("img-cols", c);
+});
+
+// 指を離したら、対応するカラム位置（段）へつまみをスナップ → 中途半端な位置で止まらない
+gsRange.addEventListener("change", () => {
+  gsRange.value = maxCols() + 1 - currentCols();
 });
 
 let rT;
