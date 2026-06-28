@@ -572,14 +572,36 @@ function currentCols() {
   return Math.min(Math.max(c, 1), mc);
 }
 
-// 列数は :root に設定 → Overview・画像グリッド両方に効く
+// 列数は :root に設定 → Overview・画像グリッド両方に効く。
+// サムネは FLIP で「実際に拡縮しながら」滑らかに動かす（瞬間的な組み替えにしない）。
 function applyCols(c) {
-  document.documentElement.style.setProperty("--img-cols", c);
-  if (reduceMotion) return;
-  // 組み替えの瞬間を少しフェードさせて滑らかに（操作が止まると元の不透明度へ戻る）
-  imageView.style.opacity = "0.72";
-  clearTimeout(applyCols._t);
-  applyCols._t = setTimeout(() => { imageView.style.opacity = "1"; }, 140);
+  const setVar = () => document.documentElement.style.setProperty("--img-cols", c);
+  if (reduceMotion || imageView.classList.contains("hidden")) { setVar(); return; }
+
+  const icons = [...imageView.querySelectorAll(".photo-cell .cell-icon")];
+  if (!icons.length) { setVar(); return; }
+
+  // First: 現在の見た目（進行中アニメの途中位置も含めて測る → 連続ドラッグでも途切れない）
+  const first = icons.map(el => el.getBoundingClientRect());
+  // 変形を解除して新レイアウトを確定 → Last を測る
+  icons.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
+  setVar();
+  const last = icons.map(el => el.getBoundingClientRect());
+  // Invert: いったん元の見た目の位置・サイズへ瞬間移動
+  icons.forEach((el, i) => {
+    const f = first[i], l = last[i];
+    if (!l.width || !l.height) return;
+    el.style.transformOrigin = "top left";
+    el.style.transform =
+      `translate(${f.left - l.left}px, ${f.top - l.top}px) scale(${f.width / l.width}, ${f.height / l.height})`;
+  });
+  // Play: 次フレームで本来の位置・サイズへスーッと戻す
+  requestAnimationFrame(() => {
+    icons.forEach(el => {
+      el.style.transition = "transform 0.42s var(--ease)";
+      el.style.transform = "";
+    });
+  });
 }
 
 function syncSlider() {

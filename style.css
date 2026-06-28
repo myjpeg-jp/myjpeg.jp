@@ -320,8 +320,7 @@ html, body {
   background-position: center;          /* blur-up プレースホルダー */
   transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
 }
-/* ホバーで微かに浮く / タップで軽く沈む */
-.photo-cell:hover .cell-icon { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.18); }
+/* タップで軽く沈む（ホバーエフェクトは無し） */
 .photo-cell:active .cell-icon { transform: scale(0.98); transition-duration: 0.08s; }
 .photo-cell .cell-icon img {
   display: block;
@@ -331,7 +330,6 @@ html, body {
   transition: opacity 0.4s ease;
 }
 .photo-cell .cell-icon img.is-loaded { opacity: 1; }
-.photo-cell:hover .cell-icon img.is-loaded { opacity: 0.9; }
 
 /* Overview のフォルダ/ファイルもタップで軽く沈む */
 .folder-cell .cell-icon, .file-cell .cell-icon { transition: transform 0.18s var(--ease); }
