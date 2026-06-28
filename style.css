@@ -237,7 +237,7 @@ html, body {
 /* Finder-style grids (folders & images share base) */
 .finder-grid {
   display: grid;
-  gap: 30px 24px;
+  gap: 12px;          /* PC: メインエリアのマージン(--sidebar-inset)に合わせる */
 }
 
 /* Overview: grouped by sidebar section, divided into rows */
@@ -611,6 +611,9 @@ html, body {
   /* rounder corners overall on mobile */
   .nav-item { border-radius: 13px; }
   .photo-cell .cell-icon { border-radius: 12px; }
+
+  /* 画像グリッド: メインエリアのマージン(10px)に合わせる */
+  .finder-grid { gap: 10px; }
 
   /* Overview: 3 columns on mobile */
   .ov-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 6px; }
