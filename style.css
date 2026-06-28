@@ -578,7 +578,7 @@ html, body {
   .pages {
     position: static;
     inset: auto;
-    margin: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    margin: 12px;          /* 下も12pxに揃える（env のホームインジケーター分を外す） */
     border-radius: 28px;
     flex: 1;              /* fill remaining screen height */
     min-height: 0;
