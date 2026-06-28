@@ -267,11 +267,11 @@ html, body {
   transition: opacity 0.2s ease;   /* スライダー操作時のクロスフェード */
 }
 
-/* ページ遷移（Overview ⇄ フォルダ）のフェードイン */
+/* ページ遷移（Overview ⇄ フォルダ）のフェードイン（上下の移動なし・フェードのみ） */
 .view-in { animation: viewIn 0.28s var(--ease) both; }
 @keyframes viewIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* OS の「視差効果を減らす」設定を尊重 — アニメーションを無効化 */
@@ -395,13 +395,12 @@ html, body {
   object-fit: contain;
   border-radius: 0;                       /* 角丸なし */
   box-shadow: 0 14px 50px var(--img-shadow);
-  transform: scale(0.93);
   opacity: 0;
-  transition: transform 0.46s var(--ease-out), opacity 0.46s var(--ease-out);
+  transition: opacity 0.4s var(--ease-out);
 }
-/* 新しい画像が用意できてから .shown を付けて拡大フェードイン
-   （前の画像がチラ見えするのを防ぐ） */
-.lb-img.shown { transform: scale(1); opacity: 1; }
+/* 新しい画像が用意できてから .shown を付けてフェードイン
+   （スケールなし／前の画像のチラ見え防止） */
+.lb-img.shown { opacity: 1; }
 .lb-caption {
   font-size: 0.8125rem;         /* HIG Footnote · 13pt */
   line-height: 1.3846;
