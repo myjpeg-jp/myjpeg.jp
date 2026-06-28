@@ -209,7 +209,7 @@ html, body {
   flex: 1;
   min-height: 0;          /* allow shrink so the card matches its height */
   overflow-y: auto;
-  padding: 40px 40px 28px;
+  padding: 50px 50px 50px;
 }
 
 /* Footer (full width of main area) */
@@ -249,7 +249,7 @@ html, body {
 .ov-group {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  gap: 40px 46px;   /* ≒ reference 3rem gutter */
+  gap: 40px 50px;   /* ≒ reference 3rem gutter */
 }
 .ov-divider {
   width: 100%;
@@ -284,8 +284,8 @@ html, body {
 .file-cell   .cell-icon svg { width: 84px; height: auto; }
 
 .cell-icon img.icon-png {
-  width: 92px;
-  height: 92px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
 }
 
