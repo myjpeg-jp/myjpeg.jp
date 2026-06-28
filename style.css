@@ -629,7 +629,7 @@ html, body {
     flex: 1;              /* fill remaining screen height */
     min-height: 0;
   }
-  .pages-scroll { padding: 24px 20px 24px; }
+  .pages-scroll { padding: 20px 20px 20px; }
 
   /* iOS Safari: position:fixed 要素は「下部バーの上（可視領域）」に収まる。
      content-wrap を fixed・inset:0・高さ指定なし にすると、ツールバー表示時も
