@@ -557,18 +557,19 @@ lightbox.addEventListener("touchend", e => {
 
 // ═══════════════════════════════════════════════════════════
 //  GRID SIZE SLIDER  (Finder-style: left = 多カラム / right = 少カラム)
-//  PC: 6→1 (既定 6) / Mobile: 2→1 (既定 2)
+//  PC: 6→1 (既定 6) / Mobile: 3→1 (既定 2)
 // ═══════════════════════════════════════════════════════════
 const MOBILE_BP = 760;
 const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 
-function maxCols() { return window.innerWidth <= MOBILE_BP ? 2 : 6; }
+function maxCols()     { return window.innerWidth <= MOBILE_BP ? 3 : 6; }   // 段階の上限
+function defaultCols() { return window.innerWidth <= MOBILE_BP ? 2 : 6; }   // 既定（保存値が無い時）
 
 function currentCols() {
   const mc = maxCols();
   let c = parseInt(lsGet("img-cols"), 10);
-  if (!Number.isInteger(c) || c < 1) c = mc;   // 既定 = 最大カラム
+  if (!Number.isInteger(c) || c < 1) c = defaultCols();   // 既定: スマホ2 / PC6
   return Math.min(Math.max(c, 1), mc);
 }
 
