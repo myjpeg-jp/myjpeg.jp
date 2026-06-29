@@ -666,7 +666,7 @@ html, body {
     overflow: hidden;
   }
   body.ov-mode .pages {
-    margin: 12px 10px 10px;     /* 下マージンを通常に戻す（スライダー無し） */
+    margin: 12px 10px 4px;     /* 下マージンを通常に戻す（スライダー無し） */
     flex: 1;                    /* 残りの画面高さを埋める */
     min-height: 0;
   }
