@@ -7,7 +7,7 @@
 
 /* ダブルタップでのズームを無効化（ピンチズーム・スクロールは維持）
    ＝ +/− ボタン連打などで誤ってサイト全体が拡大される事故を防ぐ */
-html { touch-action: manipulation; }
+html { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-stepper button {
   touch-action: manipulation;
 }
