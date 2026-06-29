@@ -666,17 +666,23 @@ html, body {
      8px strip, and no snap during collapse. */
   .nav-inner > .nav-section:first-child { padding-top: 8px; }
   
-  .pages {
+.pages {
     position: static;
     inset: auto;
     margin: 10px;          
     margin-top: 12px;
-    margin-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); /* 修正箇所: env(safe-area-inset-bottom) を追加 */
-    border-radius: 28px;
+    /* ↓ 修正1：margin-bottom を 0 にして、カードを画面の底（タブバーの裏）まで伸ばす */
+    margin-bottom: 0; 
+    /* ↓ 修正2：底辺が画面にくっつくので、下側の角丸を無くして上だけ丸くする */
+    border-radius: 28px 28px 0 0; 
     flex: 1;              
     min-height: 0;
   }
-  .pages-scroll { padding: 20px 20px 20px; }
+
+  .pages-scroll { 
+    /* ↓ 修正3：margin で避けていたタブバー分の高さを、スクロールする内側の余白（padding）として確保する */
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px)); 
+  }
 
   .content-wrap {
     position: fixed;
