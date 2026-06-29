@@ -215,12 +215,13 @@ html, body {
   min-width: 0;
 }
 
-/* Scrollable content region */
-.pages-scroll {
-  flex: 1;
+/* 各ビューが直接スクロール領域になる（.pages-scroll の入れ子は廃止）。
+   表示中のビューが flex:1 で伸び、フッターは下に固定される。 */
+#overview-view, #image-view {
+  flex: 1 1 auto;
   min-height: 0;          /* allow shrink so the card matches its height */
   overflow-y: auto;
-  padding: 50px 50px 50px;
+  padding: 50px;
 }
 
 /* Footer (full width of main area) */
@@ -675,7 +676,7 @@ html, body {
     flex: 1;              /* fill remaining screen height */
     min-height: 0;
   }
-  .pages-scroll { padding: 20px 20px 20px; }
+  #overview-view, #image-view { padding: 20px; }
 
   /* iOS Safari: position:fixed 要素は「下部バーの上（可視領域）」に収まる。
      content-wrap を fixed・inset:0・高さ指定なし にすると、ツールバー表示時も
@@ -693,17 +694,17 @@ html, body {
   /* 写真一覧の時だけ「ページ全体スクロール」に切り替え → Safari のツールバーが引っ込む。
      （Overview は上の固定アプリシェルのまま。フッターはページ最下部へ移動する） */
   body.view-images .content-wrap {
+    display: block;     /* flex をやめ、素のブロックフロー（cargoと同じ document スクロール）*/
     position: static;
     height: auto;
-    min-height: 100vh;
-    min-height: 100svh;
+    min-height: 0;
     overflow: visible;
   }
   body.view-images .pages {
-    flex: 1 0 auto;     /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
+    display: block;
     overflow: visible;
   }
-  body.view-images .pages-scroll {
+  body.view-images #image-view {
     overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
   }
   /* nav rows inherit the iOS Body · 17pt size from base */

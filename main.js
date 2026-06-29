@@ -183,7 +183,6 @@ const gridSlider   = document.getElementById("grid-slider");
 const gsRange      = document.getElementById("gs-range");
 const sidebar      = document.querySelector(".sidebar");
 const menuToggle   = document.getElementById("menu-toggle");
-const pagesScroll  = document.querySelector(".pages-scroll");
 
 // 可視領域の高さ（iOS Safari のツールバーを除いた実寸）を CSS 変数に反映
 function setVVH() {
@@ -474,10 +473,10 @@ async function route(view) {
   const seq = ++routeSeq;
   setActive(view);
 
-  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); return; }
+  if (view === "overview") { showOverview(); playFadeIn(overviewView); overviewView.scrollTo({ top: 0 }); window.scrollTo(0, 0); return; }
 
   showImages();
-  pagesScroll?.scrollTo({ top: 0 });
+  imageView.scrollTo({ top: 0 });
   window.scrollTo(0, 0);   // ページ全体スクロール時も先頭へ戻す
 
   // 対象フォルダを決める（All ○○ はセクション内の全フォルダを集約）
