@@ -665,39 +665,37 @@ function applyCols(c) {
 
   const icons = [...imageView.querySelectorAll(".photo-cell .cell-icon")];
   if (!icons.length) { setVar(); return; }
-
-  // 画面上端に見えているサムネをアンカーにして、レイアウト変更でスクロールが飛ばないようにする
-  const anchorize = () => {
-    const pageScroll = window.innerWidth <= MOBILE_BP && document.body.classList.contains("view-images");
-    if (!pageScroll) { setVar(); return; }
-    let anchorEl = null, anchorTop = 0, best = Infinity;
-    icons.forEach(el => { const t = el.getBoundingClientRect().top; if (t >= -40 && t < best) { best = t; anchorEl = el; anchorTop = t; } });
-    if (!anchorEl) { anchorEl = icons[0]; anchorTop = icons[0].getBoundingClientRect().top; }
-    setVar();
-    const after = anchorEl.getBoundingClientRect().top;
-    if (after !== anchorTop) window.scrollBy(0, after - anchorTop);
-  };
-
-  // スマホ: スケールFLIPだと iOS で角丸が毎フレーム再描画されチラつくので、
-  // 拡縮アニメはせず「クロスフェード」で切り替える（角丸はスケールされないので安定）。
-  if (window.innerWidth <= MOBILE_BP) {
-    anchorize();
-    imageView.style.transition = "none";
-    imageView.style.opacity = "0.3";
-    void imageView.offsetWidth;
-    imageView.style.transition = "opacity 0.32s var(--ease)";
-    imageView.style.opacity = "1";
-    return;
-  }
-
-  // PC: サムネを実際に拡縮しながら動かす FLIP（角丸はスケールに合わせて逆補正）
   const movers = [...icons, ...imageView.querySelectorAll(".photo-cell .cell-caption")];
   const scaled = new Set(icons);
+  const isMobile = window.innerWidth <= MOBILE_BP;
+  const pageScroll = isMobile && document.body.classList.contains("view-images");
+
+  // First: 現在の見た目（進行中アニメの途中位置も含む）
   const first = movers.map(el => el.getBoundingClientRect());
+
+  // ページ全体スクロール時は、画面上端のサムネを基準にスクロール位置がズレないようにする
+  let anchorEl = null, anchorTop = 0;
+  if (pageScroll) {
+    let best = Infinity;
+    for (let i = 0; i < icons.length; i++) {
+      const t = first[i].top;
+      if (t >= -40 && t < best) { best = t; anchorEl = icons[i]; anchorTop = t; }
+    }
+    if (!anchorEl) { anchorEl = icons[0]; anchorTop = first[0].top; }
+  }
+
   movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
+  if (pageScroll && anchorEl) {
+    const after = anchorEl.getBoundingClientRect().top;
+    if (after !== anchorTop) window.scrollBy(0, after - anchorTop);
+  }
   const last = movers.map(el => el.getBoundingClientRect());
-  const R = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0;
+
+  // 角丸の逆補正は PC のみ。iOS では border-radius のアニメが毎フレーム再描画されチラつくため、
+  // スマホでは補正しない（角丸は transform と一緒に GPU で滑らかにスケールされる）。
+  const R = isMobile ? 0 : (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0);
+
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
@@ -712,10 +710,13 @@ function applyCols(c) {
     }
   });
   requestAnimationFrame(() => {
+    const trans = R
+      ? "transform 0.42s var(--ease), border-radius 0.42s var(--ease)"
+      : "transform 0.42s var(--ease)";
     movers.forEach(el => {
-      el.style.transition = "transform 0.42s var(--ease), border-radius 0.42s var(--ease)";
+      el.style.transition = trans;
       el.style.transform = "";
-      el.style.borderRadius = "";
+      if (R) el.style.borderRadius = "";
     });
   });
 }
