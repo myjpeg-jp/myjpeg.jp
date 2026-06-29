@@ -22,6 +22,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --sidebar-inset: 12px;
   --card-radius:   20px;
   --radius-item:   11px;
+  --thumb-radius:  12px;   /* サムネの角丸（FLIP の逆補正の基準にも使う） */
   /* motion — Apple-like easing (iOS/macOS の余韻のあるイーズ) */
   --ease:    cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -350,7 +351,7 @@ html, body {
 /* Photo thumbnail */
 .photo-cell .cell-icon {
   width: 100%;
-  border-radius: 12px;
+  border-radius: var(--thumb-radius);
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12);
   background-color: var(--hover-bg);   /* 読み込み前のスケルトン色 */
@@ -727,7 +728,6 @@ html, body {
 
   /* rounder corners overall on mobile */
   .nav-item { border-radius: 13px; }
-  .photo-cell .cell-icon { border-radius: 12px; }
 
   /* 画像グリッド: メインエリアのマージン(10px)に合わせる */
   .finder-grid { gap: 20px; }

@@ -698,8 +698,8 @@ function applyCols(c) {
 
   // Last を測る（補正後の位置で）
   const last = movers.map(el => el.getBoundingClientRect());
-  // 角丸の基準値（スケールで見た目が変わらないよう逆補正するために使う）
-  const R = icons.length ? (parseFloat(getComputedStyle(icons[0]).borderRadius) || 0) : 0;
+  // 角丸の基準値はCSS変数から読む（アニメ中の途中値を拾わないよう computed の border-radius は使わない）
+  const R = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0;
   // Invert: いったん元の見た目の位置・サイズへ瞬間移動
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
