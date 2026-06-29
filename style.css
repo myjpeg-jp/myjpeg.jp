@@ -714,7 +714,7 @@ html, body {
     display: inline-flex;
     position: fixed;
     right: calc(14px + env(safe-area-inset-right, 0px));
-    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     z-index: 500;
     align-items: center;
     background: var(--sidebar-bg);
