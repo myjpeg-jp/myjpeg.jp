@@ -618,7 +618,7 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch { return null
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 
 function maxCols()     { return window.innerWidth <= MOBILE_BP ? 3 : 6; }   // 段階の上限
-function defaultCols() { return window.innerWidth <= MOBILE_BP ? 2 : 6; }   // 既定（保存値が無い時）
+function defaultCols() { return window.innerWidth <= MOBILE_BP ? 2 : 4; }   // 既定（保存値が無い時）
 
 function currentCols() {
   const mc = maxCols();
