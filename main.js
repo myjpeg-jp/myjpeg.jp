@@ -696,14 +696,6 @@ function applyCols(c) {
   // スマホでは補正しない（角丸は transform と一緒に GPU で滑らかにスケールされる）。
   const R = isMobile ? 0 : (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0);
 
-  // iOS: アニメ中は border-radius を外して再ラスタライズによるチラつきを防ぐ
-  if (isMobile) {
-    scaled.forEach(el => {
-      el.style.borderRadius = "0";
-      el.style.overflow = "hidden";
-    });
-  }
-
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
@@ -712,9 +704,7 @@ function applyCols(c) {
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
     if (scaled.has(el)) {
       el.style.transform = `${move} scale(${sx}, ${sy})`;
-      if (R) {
-        el.style.borderRadius = (R / sx) + "px";
-      }
+      if (R) el.style.borderRadius = (R / sx) + "px";
     } else {
       el.style.transform = move;
     }
@@ -728,15 +718,6 @@ function applyCols(c) {
       el.style.transform = "";
       if (R) el.style.borderRadius = "";
     });
-    // iOS: アニメ完了後に border-radius を復元
-    if (isMobile) {
-      setTimeout(() => {
-        scaled.forEach(el => {
-          el.style.borderRadius = "";
-          el.style.overflow = "";
-        });
-      }, 460);
-    }
   });
 }
 
