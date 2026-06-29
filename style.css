@@ -67,7 +67,6 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
 }
 
 html, body {
-  height: 100%;
   color-scheme: light dark;
   background: var(--bg);
   color: var(--ink);
