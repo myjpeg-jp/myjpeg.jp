@@ -114,14 +114,13 @@
     </button>
   </div>
 
-  <!-- Mobile: floating thumbnail-size stepper (− / +) -->
-  <div class="grid-stepper" id="grid-stepper" role="group" aria-label="サムネイルの大きさ">
-    <button id="step-smaller" aria-label="小さく">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>
-    </button>
-    <span class="step-divider" aria-hidden="true"></span>
-    <button id="step-larger" aria-label="大きく">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  <!-- Mobile: single floating thumbnail-size toggle (端で +/− が反転) -->
+  <div class="grid-stepper" id="grid-stepper">
+    <button id="grid-toggle" class="plus" aria-label="サムネイルを大きく">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path class="bar-h" d="M5 12h14"/>
+        <path class="bar-v" d="M12 5v14"/>
+      </svg>
     </button>
   </div>
 

@@ -717,27 +717,29 @@ function applyCols(c) {
   });
 }
 
-// スマホ用ステッパー（−/+）
-const gridStepper = document.getElementById("grid-stepper");
-const stepSmaller = document.getElementById("step-smaller");   // 列を増やす＝サムネ小さく
-const stepLarger  = document.getElementById("step-larger");    // 列を減らす＝サムネ大きく
-function setStepperState(c) {
+// スマホ用：1ボタンのカラム調整（端で向きが反転するバウンス式）
+const gridToggle = document.getElementById("grid-toggle");
+let toggleDir = -1;   // -1: 押すと列を減らす(＝大きく / 「+」表示) / +1: 増やす(＝小さく / 「−」表示)
+function updateToggle(c) {
   const mc = maxCols();
-  if (stepLarger)  stepLarger.disabled  = (c <= 1);    // これ以上大きくできない
-  if (stepSmaller) stepSmaller.disabled = (c >= mc);   // これ以上小さくできない
+  if (c <= 1) toggleDir = +1;          // 最小 → 次は小さく（−）
+  else if (c >= mc) toggleDir = -1;    // 最大 → 次は大きく（+）
+  // 中間は今の向きを維持
+  if (gridToggle) {
+    gridToggle.classList.toggle("plus", toggleDir === -1);
+    gridToggle.setAttribute("aria-label", toggleDir === -1 ? "サムネイルを大きく" : "サムネイルを小さく");
+  }
 }
-// カラム数を確定（描画＋保存＋ステッパー同期）— ステッパー/ピンチ共通
+// カラム数を確定（描画＋保存＋ボタン同期）— ボタン/ピンチ共通
 function commitCols(c) {
   applyCols(c);
   lsSet("img-cols", c);
-  setStepperState(c);
+  updateToggle(c);
 }
-function stepCols(delta) {   // delta -1: 大きく(列-1) / +1: 小さく(列+1)
+gridToggle?.addEventListener("click", () => {
   const mc = maxCols();
-  commitCols(Math.min(Math.max(currentCols() + delta, 1), mc));
-}
-stepLarger?.addEventListener("click", () => stepCols(-1));
-stepSmaller?.addEventListener("click", () => stepCols(+1));
+  commitCols(Math.min(Math.max(currentCols() + toggleDir, 1), mc));
+});
 
 // ── ピンチでカラム調整（スマホ）: 広げる=大きく(列減) / つまむ=小さく(列増) ──
 let pinching = false, pinchDist0 = 0, pinchBaseCols = 0;
@@ -773,7 +775,7 @@ function syncSlider() {
   gsRange.step = "any";          // つまみを段階でなく連続的に動かす（カクつき防止）
   gsRange.value = mc + 1 - c;    // 左端 = 最大カラム
   applyCols(c);
-  setStepperState(c);            // スマホのステッパーの有効/無効も同期
+  updateToggle(c);               // スマホの1ボタンの向き/表示も同期
 }
 
 gsRange.addEventListener("input", () => {
@@ -782,7 +784,7 @@ gsRange.addEventListener("input", () => {
   const c = Math.min(Math.max(mc + 1 - Math.round(parseFloat(gsRange.value)), 1), mc);
   applyCols(c);
   lsSet("img-cols", c);
-  setStepperState(c);
+  updateToggle(c);
 });
 
 // 指を離したら、対応するカラム位置（段）へつまみをスナップ → 中途半端な位置で止まらない

@@ -288,12 +288,12 @@ html, body {
   transition: color 0.15s, transform 0.08s;
 }
 .grid-stepper button:active { transform: scale(0.9); }
-.grid-stepper button:disabled { color: var(--ink-mute); cursor: default; }
-.grid-stepper button:disabled:active { transform: none; }
-.grid-stepper .step-divider {
-  width: 0.5px; align-self: stretch; margin: 9px 0;
-  background: var(--card-border);
+/* + ⇄ − のモーフィング（縦棒を伸縮）*/
+#grid-toggle .bar-v {
+  transform-origin: center;
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
 }
+#grid-toggle:not(.plus) .bar-v { opacity: 0; transform: scaleY(0); }
 
 /* 空フォルダの控えめな表示 */
 .empty-note {
