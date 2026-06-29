@@ -460,13 +460,11 @@ function showOverview() {
   overviewView.classList.remove("hidden");
   imageView.classList.add("hidden");
   gridSlider.classList.add("hidden");        // slider only for thumbnails
-  document.body.classList.add("ov-mode");    // モバイル: Overview は画面高いっぱい＋内部スクロール
 }
 function showImages() {
   overviewView.classList.add("hidden");
   imageView.classList.remove("hidden");
   gridSlider.classList.remove("hidden");
-  document.body.classList.remove("ov-mode"); // モバイル: 画像表示はページ全体スクロール
 }
 
 let routeSeq = 0;
