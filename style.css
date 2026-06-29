@@ -639,30 +639,42 @@ html, body {
   .pages {
     position: static;
     inset: auto;
-    margin: 10px;          /* サイト全体のマージン（上下左右） */
-    margin-top: 12px;
-    margin-bottom: 4px;
+    margin: 12px 10px 72px;   /* 下に余白＝固定スライダーがコピーライトに被らない */
     border-radius: 28px;
-    flex: 1;              /* fill remaining screen height */
     min-height: 0;
   }
-  .pages-scroll { padding: 20px 20px 20px; }
+  .pages-scroll {
+    flex: none;
+    overflow: visible;        /* 内部スクロールを無効化 → ドキュメントが伸びる */
+    padding: 20px 20px 20px;
+  }
 
-  /* iOS Safari: position:fixed 要素は「下部バーの上（可視領域）」に収まる。
-     content-wrap を fixed・inset:0・高さ指定なし にすると、ツールバー表示時も
-     可視領域いっぱいに収まり、フッターまで含めてバーの裏に隠れない。
-     （高さを 100%/100vh 等で固定すると追従が上書きされ裏に隠れてしまう） */
+  /* モバイルはページ全体をスクロール（＝他サイト同様ツールバーが引っ込む）。
+     content-wrap は通常フローの縦並びにして、内容に応じて伸びる。 */
   .content-wrap {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: var(--vvh, 100%);   /* JSが実測した可視領域の高さ（ツールバー除外）にぴったり合わせる */
-    min-height: 0;              /* base の min-height:100vh を打ち消す */
     flex-direction: column;
-    overflow: hidden;
+    min-height: 100vh;
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
-  .grid-slider { right: 14px; }
-  #gs-range { width: 86px; }
+
+  /* サムネサイズスライダー：フッターから切り離し、画面下部に固定の半透明ピル */
+  .grid-slider {
+    position: fixed;
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    transform: translateX(-50%);
+    z-index: 900;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--sidebar-bg);            /* frosted material */
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--card-border);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+  }
+  #gs-range { width: 120px; }
   .copyright { font-size: 0.74rem; }
 
   /* rounder corners overall on mobile */
