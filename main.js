@@ -460,11 +460,13 @@ function showOverview() {
   overviewView.classList.remove("hidden");
   imageView.classList.add("hidden");
   gridSlider.classList.add("hidden");        // slider only for thumbnails
+  document.body.classList.remove("view-images");
 }
 function showImages() {
   overviewView.classList.add("hidden");
   imageView.classList.remove("hidden");
   gridSlider.classList.remove("hidden");
+  document.body.classList.add("view-images"); // スマホは写真一覧でページ全体スクロールに
 }
 
 let routeSeq = 0;
@@ -472,10 +474,11 @@ async function route(view) {
   const seq = ++routeSeq;
   setActive(view);
 
-  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); return; }
+  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); return; }
 
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
+  window.scrollTo(0, 0);   // ページ全体スクロール時も先頭へ戻す
 
   // 対象フォルダを決める（All ○○ はセクション内の全フォルダを集約）
   let folders = [];
@@ -520,9 +523,31 @@ function preloadAdjacent() {
   }
 }
 let lbReturnFocus = null;                 // 閉じた後にフォーカスを戻す先
+// ライトボックス表示中、背景ページがスクロールしないように固定（スマホの写真一覧＝ページ全体スクロール時のみ）
+let lockedScrollY = 0, scrollLocked = false;
+function lockScroll() {
+  if (scrollLocked) return;
+  if (!(window.innerWidth <= MOBILE_BP && document.body.classList.contains("view-images"))) return;
+  lockedScrollY = window.scrollY;
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${lockedScrollY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  scrollLocked = true;
+}
+function unlockScroll() {
+  if (!scrollLocked) return;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  window.scrollTo(0, lockedScrollY);
+  scrollLocked = false;
+}
 function openLightbox(i) {
   if (!lbImages.length) return;
   lbReturnFocus = document.activeElement; // 開く前のフォーカス位置を記憶
+  lockScroll();                           // 背景スクロールをロック
   // 前の画像を「フェードさせず即座に」隠す（A→閉じる→B でAがチラ見えするのを防ぐ）
   lbImg.style.transition = "none";
   lbImg.classList.remove("shown");
@@ -544,6 +569,7 @@ function openLightbox(i) {
 }
 function closeLightbox() {
   lightbox.classList.remove("open");
+  unlockScroll();                                                  // 背景スクロールのロック解除
   if (lbReturnFocus && lbReturnFocus.focus) lbReturnFocus.focus();  // 元の位置へフォーカスを戻す
 }
 // 前後送り：方向に合わせて左右へスライド＋フェード

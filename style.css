@@ -660,6 +660,23 @@ html, body {
     flex-direction: column;
     overflow: hidden;
   }
+
+  /* 写真一覧の時だけ「ページ全体スクロール」に切り替え → Safari のツールバーが引っ込む。
+     （Overview は上の固定アプリシェルのまま。フッターはページ最下部へ移動する） */
+  body.view-images .content-wrap {
+    position: static;
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: visible;
+  }
+  body.view-images .pages {
+    flex: 1 0 auto;     /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
+    overflow: visible;
+  }
+  body.view-images .pages-scroll {
+    overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
+  }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { right: 14px; }
   #gs-range { width: 86px; }
