@@ -698,21 +698,28 @@ function applyCols(c) {
 
   // Last を測る（補正後の位置で）
   const last = movers.map(el => el.getBoundingClientRect());
+  // 角丸の基準値（スケールで見た目が変わらないよう逆補正するために使う）
+  const R = icons.length ? (parseFloat(getComputedStyle(icons[0]).borderRadius) || 0) : 0;
   // Invert: いったん元の見た目の位置・サイズへ瞬間移動
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
     el.style.transformOrigin = "top left";
+    const sx = f.width / l.width, sy = f.height / l.height;
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
-    el.style.transform = scaled.has(el)
-      ? `${move} scale(${f.width / l.width}, ${f.height / l.height})`   // 画像は拡縮＋移動
-      : move;                                                           // キャプションは移動のみ
+    if (scaled.has(el)) {
+      el.style.transform = `${move} scale(${sx}, ${sy})`;   // 画像は拡縮＋移動
+      if (R) el.style.borderRadius = (R / sx) + "px";       // scale で角丸が変わらないよう逆補正
+    } else {
+      el.style.transform = move;                            // キャプションは移動のみ
+    }
   });
-  // Play: 次フレームで本来の位置・サイズへスーッと戻す
+  // Play: 次フレームで本来の位置・サイズ・角丸へスーッと戻す
   requestAnimationFrame(() => {
     movers.forEach(el => {
-      el.style.transition = "transform 0.42s var(--ease)";
+      el.style.transition = "transform 0.42s var(--ease), border-radius 0.42s var(--ease)";
       el.style.transform = "";
+      el.style.borderRadius = "";
     });
   });
 }
