@@ -5,6 +5,13 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ダブルタップでのズームを無効化（ピンチズーム・スクロールは維持）
+   ＝ +/− ボタン連打などで誤ってサイト全体が拡大される事故を防ぐ */
+html { touch-action: manipulation; }
+button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-stepper button {
+  touch-action: manipulation;
+}
+
 /* ──────────────────────────────────────────────
    Color tokens — Apple system colors (iOS / macOS)
    Light is the default; dark via prefers-color-scheme.
@@ -275,6 +282,7 @@ html, body {
   display: flex; align-items: center; justify-content: center;
   width: 48px; height: 44px;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;     /* 連打時のダブルタップズームを無効化 */
   transition: color 0.15s, transform 0.08s;
 }
 .grid-stepper button:active { transform: scale(0.9); }
