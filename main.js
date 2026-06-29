@@ -704,7 +704,15 @@ function applyCols(c) {
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
     if (scaled.has(el)) {
       el.style.transform = `${move} scale(${sx}, ${sy})`;
-      if (R) el.style.borderRadius = (R / sx) + "px";
+      if (R) {
+        el.style.borderRadius = (R / sx) + "px";
+      } else if (isMobile) {
+        // iOS では overflow:hidden の角丸クリップがフレーム毎に再計算され角がピクピク揺れる。
+        // 独立した GPU レイヤーに載せて角丸クリップをテクスチャに焼き込み、再ラスタライズを防ぐ。
+        el.style.willChange = "transform";
+        el.style.webkitBackfaceVisibility = "hidden";
+        el.style.backfaceVisibility = "hidden";
+      }
     } else {
       el.style.transform = move;
     }
@@ -718,6 +726,16 @@ function applyCols(c) {
       el.style.transform = "";
       if (R) el.style.borderRadius = "";
     });
+    // アニメ完了後にレイヤー昇格を解除（常時昇格はモバイルのメモリを圧迫するため）
+    if (!R && isMobile) {
+      setTimeout(() => {
+        scaled.forEach(el => {
+          el.style.willChange = "";
+          el.style.webkitBackfaceVisibility = "";
+          el.style.backfaceVisibility = "";
+        });
+      }, 480);
+    }
   });
 }
 
