@@ -535,6 +535,7 @@ html, body {
   align-items: center;
 }
 .grid-slider.hidden { display: none !important; }
+.gs-icon { display: none; }   /* 両端アイコンは PC では非表示（モバイルのピルでのみ表示） */
 
 #gs-range {
   -webkit-appearance: none;
@@ -657,24 +658,35 @@ html, body {
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
 
-  /* サムネサイズスライダー：フッターから切り離し、画面下部に固定の半透明ピル */
+  /* サムネサイズスライダー：Finder / 写真アプリ風のサイズ調整コントロール。
+     フッターから切り離し、両端に小→大アイコンを添えた固定ピルにする。 */
   .grid-slider {
     position: fixed;
     right: auto;
     left: 50%;
     top: auto;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
     transform: translateX(-50%);
     z-index: 900;
-    padding: 9px 16px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    height: 44px;                 /* タップしやすい高さ（HIG） */
+    padding: 0 16px;
     border-radius: 999px;
     background: var(--sidebar-bg);            /* frosted material */
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid var(--card-border);
-    box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.16);
   }
-  #gs-range { width: 120px; }
+  .gs-icon {
+    display: flex;
+    align-items: center;
+    color: var(--ink-mute);       /* 控えめ（tertiaryLabel） */
+    flex-shrink: 0;
+  }
+  #gs-range { width: 116px; }
   .copyright { font-size: 0.74rem; }
 
   /* rounder corners overall on mobile */
