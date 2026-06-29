@@ -696,6 +696,14 @@ function applyCols(c) {
   // スマホでは補正しない（角丸は transform と一緒に GPU で滑らかにスケールされる）。
   const R = isMobile ? 0 : (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0);
 
+  // iOS: アニメ中は border-radius を外して再ラスタライズによるチラつきを防ぐ
+  if (isMobile) {
+    scaled.forEach(el => {
+      el.style.borderRadius = "0";
+      el.style.overflow = "hidden";
+    });
+  }
+
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
@@ -706,12 +714,6 @@ function applyCols(c) {
       el.style.transform = `${move} scale(${sx}, ${sy})`;
       if (R) {
         el.style.borderRadius = (R / sx) + "px";
-      } else if (isMobile) {
-        // iOS では overflow:hidden の角丸クリップがフレーム毎に再計算され角がピクピク揺れる。
-        // 独立した GPU レイヤーに載せて角丸クリップをテクスチャに焼き込み、再ラスタライズを防ぐ。
-        el.style.willChange = "transform";
-        el.style.webkitBackfaceVisibility = "hidden";
-        el.style.backfaceVisibility = "hidden";
       }
     } else {
       el.style.transform = move;
@@ -726,15 +728,14 @@ function applyCols(c) {
       el.style.transform = "";
       if (R) el.style.borderRadius = "";
     });
-    // アニメ完了後にレイヤー昇格を解除（常時昇格はモバイルのメモリを圧迫するため）
-    if (!R && isMobile) {
+    // iOS: アニメ完了後に border-radius を復元
+    if (isMobile) {
       setTimeout(() => {
         scaled.forEach(el => {
-          el.style.willChange = "";
-          el.style.webkitBackfaceVisibility = "";
-          el.style.backfaceVisibility = "";
+          el.style.borderRadius = "";
+          el.style.overflow = "";
         });
-      }, 480);
+      }, 460);
     }
   });
 }
