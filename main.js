@@ -726,15 +726,44 @@ function setStepperState(c) {
   if (stepLarger)  stepLarger.disabled  = (c <= 1);    // これ以上大きくできない
   if (stepSmaller) stepSmaller.disabled = (c >= mc);   // これ以上小さくできない
 }
-function stepCols(delta) {   // delta -1: 大きく(列-1) / +1: 小さく(列+1)
-  const mc = maxCols();
-  const c = Math.min(Math.max(currentCols() + delta, 1), mc);
+// カラム数を確定（描画＋保存＋ステッパー同期）— ステッパー/ピンチ共通
+function commitCols(c) {
   applyCols(c);
   lsSet("img-cols", c);
   setStepperState(c);
 }
+function stepCols(delta) {   // delta -1: 大きく(列-1) / +1: 小さく(列+1)
+  const mc = maxCols();
+  commitCols(Math.min(Math.max(currentCols() + delta, 1), mc));
+}
 stepLarger?.addEventListener("click", () => stepCols(-1));
 stepSmaller?.addEventListener("click", () => stepCols(+1));
+
+// ── ピンチでカラム調整（スマホ）: 広げる=大きく(列減) / つまむ=小さく(列増) ──
+let pinching = false, pinchDist0 = 0, pinchBaseCols = 0;
+const touchDist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+imageView.addEventListener("touchstart", e => {
+  if (e.touches.length === 2) {
+    pinching = true;
+    pinchDist0 = touchDist(e.touches);
+    pinchBaseCols = currentCols();
+  }
+}, { passive: true });
+imageView.addEventListener("touchmove", e => {
+  if (!pinching || e.touches.length !== 2) return;
+  e.preventDefault();                          // ブラウザのズームを止める
+  const ratio = touchDist(e.touches) / pinchDist0;
+  const STEP = 1.4;                            // この倍率を超えたら1段階
+  if (ratio >= STEP) {                         // 広げる → 大きく（列を減らす）
+    const c = Math.max(1, pinchBaseCols - 1);
+    if (c !== pinchBaseCols) { commitCols(c); pinchBaseCols = c; pinchDist0 = touchDist(e.touches); }
+  } else if (ratio <= 1 / STEP) {              // つまむ → 小さく（列を増やす）
+    const c = Math.min(maxCols(), pinchBaseCols + 1);
+    if (c !== pinchBaseCols) { commitCols(c); pinchBaseCols = c; pinchDist0 = touchDist(e.touches); }
+  }
+}, { passive: false });
+imageView.addEventListener("touchend", e => { if (e.touches.length < 2) pinching = false; }, { passive: true });
+imageView.addEventListener("touchcancel", () => { pinching = false; }, { passive: true });
 
 function syncSlider() {
   const mc = maxCols();

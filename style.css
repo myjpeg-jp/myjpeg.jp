@@ -273,6 +273,8 @@ html, body {
   grid-template-columns: repeat(var(--img-cols, 6), minmax(0, 1fr));
   transition: opacity 0.2s ease;   /* スライダー操作時のクロスフェード */
 }
+/* 縦スクロールは許可しつつ、ピンチは JS で「カラム調整」に使う（ブラウザのズームは抑止） */
+#image-view, #image-view .cell { touch-action: pan-y; }
 
 /* ── Mobile thumbnail-size stepper (−/+) — フローティングのすりガラスピル ── */
 .grid-stepper { display: none; }   /* PC では非表示（フッターのスライダーを使う） */
