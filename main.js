@@ -843,18 +843,12 @@ function tzLabel() {
 }
 
 function tickClock() {
-  if (window.innerWidth <= MOBILE_BP) {
-    // モバイルは現在時刻（HH:MM:SS）
-    const d = new Date();
-    footerClock.textContent =
-      `© ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  } else {
-    const d = new Date();
-    footerClock.textContent =
-      `© ${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_` +
-      `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}` +
-      `_${tzLabel()} MYJPEG.JP`;
-  }
+  // PC・スマホ共通のフルタイムスタンプ
+  const d = new Date();
+  footerClock.textContent =
+    `© ${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_` +
+    `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}` +
+    `_${tzLabel()} MYJPEG.JP`;
   requestAnimationFrame(tickClock);
 }
 tickClock();
