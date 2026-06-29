@@ -282,7 +282,7 @@ html, body {
   border: none; background: none; cursor: pointer;
   color: var(--ink);
   display: flex; align-items: center; justify-content: center;
-  width: 52px; height: 52px;       /* 正円 */
+  width: 45px; height: 45px;       /* 正円 */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;     /* 連打時のダブルタップズームを無効化 */
   transition: color 0.15s, transform 0.08s;
