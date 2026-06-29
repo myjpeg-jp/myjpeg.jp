@@ -702,15 +702,9 @@ html, body {
   body.view-images .pages {
     flex: 1 0 auto;     /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
     overflow: visible;
-    /* イマーシブ: カードの枠・余白を外して全面表示にし、写真を上下バーの裏まで回り込ませる */
-    margin: 0;
-    border: none;
-    border-radius: 0;
-    background: transparent;       /* 写真がそのままバーに透ける（白カード色を挟まない） */
   }
   body.view-images .pages-scroll {
-    overflow: visible;            /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
-    padding: 12px 10px;           /* 左右は少しだけ。スクロールで写真が上下バーの裏へ回り込む */
+    overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
