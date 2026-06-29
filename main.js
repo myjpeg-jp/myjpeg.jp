@@ -671,9 +671,32 @@ function applyCols(c) {
 
   // First: 現在の見た目（進行中アニメの途中位置も含めて測る → 連続ドラッグでも途切れない）
   const first = movers.map(el => el.getBoundingClientRect());
-  // 変形を解除して新レイアウトを確定 → Last を測る
+
+  // ページ全体スクロール（スマホ写真一覧）の時は、画面上端に見えているサムネを
+  // 基準点にする。レイアウト変更で上の段も伸縮し、スクロール位置がズレて
+  // 全体が「ガクっと」飛ぶのを防ぐためのアンカー。
+  const pageScroll = window.innerWidth <= MOBILE_BP && document.body.classList.contains("view-images");
+  let anchorEl = null, anchorTop = 0;
+  if (pageScroll) {
+    let best = Infinity;
+    for (let i = 0; i < icons.length; i++) {
+      const t = first[i].top;
+      if (t >= -40 && t < best) { best = t; anchorEl = icons[i]; anchorTop = t; }
+    }
+    if (!anchorEl && icons.length) { anchorEl = icons[0]; anchorTop = first[0].top; }
+  }
+
+  // 変形を解除して新レイアウトを確定
   movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
+
+  // 基準サムネが同じ画面位置に留まるようスクロールを補正（→ 画面が飛ばない）
+  if (pageScroll && anchorEl) {
+    const after = anchorEl.getBoundingClientRect().top;
+    if (after !== anchorTop) window.scrollBy(0, after - anchorTop);
+  }
+
+  // Last を測る（補正後の位置で）
   const last = movers.map(el => el.getBoundingClientRect());
   // Invert: いったん元の見た目の位置・サイズへ瞬間移動
   movers.forEach((el, i) => {
