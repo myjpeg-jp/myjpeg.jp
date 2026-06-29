@@ -67,6 +67,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
 }
 
 html, body {
+  height: 100%;
   color-scheme: light dark;
   background: var(--bg);
   color: var(--ink);
@@ -97,7 +98,8 @@ html, body {
   background: var(--sidebar-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--card-radius);
-  /* backdrop-filter は一旦無効化（iOS26 のバー透けを妨げないか検証中） */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* Title row (traffic lights + name) */
@@ -690,22 +692,19 @@ html, body {
 
   /* 写真一覧の時だけ「ページ全体スクロール」に切り替え → Safari のツールバーが引っ込む。
      （Overview は上の固定アプリシェルのまま。フッターはページ最下部へ移動する） */
-  /* 画像一覧は「素のドキュメントスクロール」にする（cargoと同じ構造）。
-     flex 充填・min-height をやめ、コンテンツがそのまま body 直下で縦に流れる形に。
-     → フッターが中央に居座る現象も解消し、iOS の透け挙動も標準どおりになる。 */
   body.view-images .content-wrap {
-    display: block;     /* flex をやめて素のブロックフロー */
     position: static;
     height: auto;
-    min-height: 0;      /* ビューポート充填をやめる */
+    min-height: 100vh;
+    min-height: 100svh;
     overflow: visible;
   }
   body.view-images .pages {
-    display: block;     /* flex をやめる（pages-scroll とフッターは通常フローで縦並び） */
+    flex: 1 0 auto;     /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
     overflow: visible;
   }
   body.view-images .pages-scroll {
-    overflow: visible;
+    overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
@@ -719,8 +718,9 @@ html, body {
     bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     z-index: 500;
     align-items: center;
-    background: var(--main-bg);   /* 半透明をやめて不透明に（検証中）*/
-    /* backdrop-filter は一旦無効化（iOS26 のバー透けを妨げないか検証中） */
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
     border: 0.5px solid var(--card-border);
     border-radius: 50%;
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
