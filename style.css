@@ -67,7 +67,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
 }
 
 html, body {
-  min-height: 100%;                /* 修正箇所: height: 100%; から min-height: 100%; に変更 */
+  height: 100%;
   color-scheme: light dark;
   background: var(--bg);
   color: var(--ink);
@@ -665,51 +665,52 @@ html, body {
   /* Top gap lives on the content (clipped when closed) → no leftover
      8px strip, and no snap during collapse. */
   .nav-inner > .nav-section:first-child { padding-top: 8px; }
-  
-.pages {
+  .pages {
     position: static;
     inset: auto;
-    margin: 10px;          
+    margin: 10px;          /* サイト全体のマージン（上下左右） */
     margin-top: 12px;
-    /* ↓ 修正1：margin-bottom を 0 にして、カードを画面の底（タブバーの裏）まで伸ばす */
-    margin-bottom: 0; 
-    /* ↓ 修正2：底辺が画面にくっつくので、下側の角丸を無くして上だけ丸くする */
-    border-radius: 28px 28px 0 0; 
-    flex: 1;              
+    margin-bottom: 4px;
+    border-radius: 28px;
+    flex: 1;              /* fill remaining screen height */
     min-height: 0;
   }
+  .pages-scroll { padding: 20px 20px 20px; }
 
-  .pages-scroll { 
-    /* ↓ 修正3：margin で避けていたタブバー分の高さを、スクロールする内側の余白（padding）として確保する */
-    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px)); 
-  }
-
+  /* iOS Safari: position:fixed 要素は「下部バーの上（可視領域）」に収まる。
+     content-wrap を fixed・inset:0・高さ指定なし にすると、ツールバー表示時も
+     可視領域いっぱいに収まり、フッターまで含めてバーの裏に隠れない。
+     （高さを 100%/100vh 等で固定すると追従が上書きされ裏に隠れてしまう） */
   .content-wrap {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0; /* 修正箇所: bottom: 0 を追加し、底面まで広げる */
-    /* height: var(--vvh, 100%); を削除 */
-    min-height: 0;              
+    top: 0; left: 0; right: 0;
+    height: var(--vvh, 100%);   /* JSが実測した可視領域の高さ（ツールバー除外）にぴったり合わせる */
+    min-height: 0;              /* base の min-height:100vh を打ち消す */
     flex-direction: column;
     overflow: hidden;
   }
 
+  /* 写真一覧の時だけ「ページ全体スクロール」に切り替え → Safari のツールバーが引っ込む。
+     （Overview は上の固定アプリシェルのまま。フッターはページ最下部へ移動する） */
   body.view-images .content-wrap {
     position: static;
     height: auto;
-    min-height: 100dvh; /* 修正箇所: 100svh から 100dvh に変更 */
+    min-height: 100vh;
+    min-height: 100svh;
     overflow: visible;
   }
   body.view-images .pages {
-    flex: 1 0 auto;     
+    flex: 1 0 auto;     /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
     overflow: visible;
   }
   body.view-images .pages-scroll {
-    overflow: visible;  
+    overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
   }
-  
-  .grid-slider { display: none; }   
+  /* nav rows inherit the iOS Body · 17pt size from base */
+  .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
   .copyright { font-size: 0.74rem; }
 
+  /* 写真一覧の時だけ、画面右下に丸ボタンをフローティング固定 */
   body.view-images #grid-stepper {
     display: inline-flex;
     position: fixed;
@@ -725,18 +726,22 @@ html, body {
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
   }
 
+  /* rounder corners overall on mobile */
   .nav-item { border-radius: 13px; }
 
+  /* 画像グリッド: メインエリアのマージン(10px)に合わせる */
   .finder-grid { gap: 20px; }
 
+  /* Overview: 3 columns on mobile */
   .ov-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 6px; }
 
   .ov-divider { margin: 24px 0; }
-  .cell { gap: 10px; }                    
-  .folder-cell, .file-cell { gap: 4px; }  
-  .cell-icon img.icon-png { width: clamp(68px, 25vw, 100px); height: auto; }  
+  .cell { gap: 10px; }                    /* photo thumbnails keep their spacing */
+  .folder-cell, .file-cell { gap: 4px; }  /* Overview only: icon ↔ title closer */
+  .cell-icon img.icon-png { width: clamp(68px, 25vw, 100px); height: auto; }  /* 3-up, slight inset */
   .folder-cell .cell-icon svg,
   .file-cell   .cell-icon svg { width: clamp(62px, 21vw, 92px); height: auto; }
 
+  /* preview: hide arrows, navigate by swipe instead */
   .lb-nav { display: none; }
 }
