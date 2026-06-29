@@ -663,44 +663,41 @@ function applyCols(c) {
   const setVar = () => document.documentElement.style.setProperty("--img-cols", c);
   if (reduceMotion || prev === null || imageView.classList.contains("hidden")) { setVar(); return; }
 
-  // アニメ対象: サムネ画像（拡縮あり）＋ キャプション（移動のみで歪ませず追尾）
   const icons = [...imageView.querySelectorAll(".photo-cell .cell-icon")];
-  const movers = [...icons, ...imageView.querySelectorAll(".photo-cell .cell-caption")];
-  if (!movers.length) { setVar(); return; }
-  const scaled = new Set(icons);
+  if (!icons.length) { setVar(); return; }
 
-  // First: 現在の見た目（進行中アニメの途中位置も含めて測る → 連続ドラッグでも途切れない）
-  const first = movers.map(el => el.getBoundingClientRect());
-
-  // ページ全体スクロール（スマホ写真一覧）の時は、画面上端に見えているサムネを
-  // 基準点にする。レイアウト変更で上の段も伸縮し、スクロール位置がズレて
-  // 全体が「ガクっと」飛ぶのを防ぐためのアンカー。
-  const pageScroll = window.innerWidth <= MOBILE_BP && document.body.classList.contains("view-images");
-  let anchorEl = null, anchorTop = 0;
-  if (pageScroll) {
-    let best = Infinity;
-    for (let i = 0; i < icons.length; i++) {
-      const t = first[i].top;
-      if (t >= -40 && t < best) { best = t; anchorEl = icons[i]; anchorTop = t; }
-    }
-    if (!anchorEl && icons.length) { anchorEl = icons[0]; anchorTop = first[0].top; }
-  }
-
-  // 変形を解除して新レイアウトを確定
-  movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
-  setVar();
-
-  // 基準サムネが同じ画面位置に留まるようスクロールを補正（→ 画面が飛ばない）
-  if (pageScroll && anchorEl) {
+  // 画面上端に見えているサムネをアンカーにして、レイアウト変更でスクロールが飛ばないようにする
+  const anchorize = () => {
+    const pageScroll = window.innerWidth <= MOBILE_BP && document.body.classList.contains("view-images");
+    if (!pageScroll) { setVar(); return; }
+    let anchorEl = null, anchorTop = 0, best = Infinity;
+    icons.forEach(el => { const t = el.getBoundingClientRect().top; if (t >= -40 && t < best) { best = t; anchorEl = el; anchorTop = t; } });
+    if (!anchorEl) { anchorEl = icons[0]; anchorTop = icons[0].getBoundingClientRect().top; }
+    setVar();
     const after = anchorEl.getBoundingClientRect().top;
     if (after !== anchorTop) window.scrollBy(0, after - anchorTop);
+  };
+
+  // スマホ: スケールFLIPだと iOS で角丸が毎フレーム再描画されチラつくので、
+  // 拡縮アニメはせず「クロスフェード」で切り替える（角丸はスケールされないので安定）。
+  if (window.innerWidth <= MOBILE_BP) {
+    anchorize();
+    imageView.style.transition = "none";
+    imageView.style.opacity = "0.3";
+    void imageView.offsetWidth;
+    imageView.style.transition = "opacity 0.32s var(--ease)";
+    imageView.style.opacity = "1";
+    return;
   }
 
-  // Last を測る（補正後の位置で）
+  // PC: サムネを実際に拡縮しながら動かす FLIP（角丸はスケールに合わせて逆補正）
+  const movers = [...icons, ...imageView.querySelectorAll(".photo-cell .cell-caption")];
+  const scaled = new Set(icons);
+  const first = movers.map(el => el.getBoundingClientRect());
+  movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
+  setVar();
   const last = movers.map(el => el.getBoundingClientRect());
-  // 角丸の基準値はCSS変数から読む（アニメ中の途中値を拾わないよう computed の border-radius は使わない）
   const R = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0;
-  // Invert: いったん元の見た目の位置・サイズへ瞬間移動
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
@@ -708,13 +705,12 @@ function applyCols(c) {
     const sx = f.width / l.width, sy = f.height / l.height;
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
     if (scaled.has(el)) {
-      el.style.transform = `${move} scale(${sx}, ${sy})`;   // 画像は拡縮＋移動
-      if (R) el.style.borderRadius = (R / sx) + "px";       // scale で角丸が変わらないよう逆補正
+      el.style.transform = `${move} scale(${sx}, ${sy})`;
+      if (R) el.style.borderRadius = (R / sx) + "px";
     } else {
-      el.style.transform = move;                            // キャプションは移動のみ
+      el.style.transform = move;
     }
   });
-  // Play: 次フレームで本来の位置・サイズ・角丸へスーッと戻す
   requestAnimationFrame(() => {
     movers.forEach(el => {
       el.style.transition = "transform 0.42s var(--ease), border-radius 0.42s var(--ease)";
