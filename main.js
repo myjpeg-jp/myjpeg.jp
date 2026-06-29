@@ -694,6 +694,25 @@ function applyCols(c) {
   });
 }
 
+// スマホ用ステッパー（−/+）
+const gridStepper = document.getElementById("grid-stepper");
+const stepSmaller = document.getElementById("step-smaller");   // 列を増やす＝サムネ小さく
+const stepLarger  = document.getElementById("step-larger");    // 列を減らす＝サムネ大きく
+function setStepperState(c) {
+  const mc = maxCols();
+  if (stepLarger)  stepLarger.disabled  = (c <= 1);    // これ以上大きくできない
+  if (stepSmaller) stepSmaller.disabled = (c >= mc);   // これ以上小さくできない
+}
+function stepCols(delta) {   // delta -1: 大きく(列-1) / +1: 小さく(列+1)
+  const mc = maxCols();
+  const c = Math.min(Math.max(currentCols() + delta, 1), mc);
+  applyCols(c);
+  lsSet("img-cols", c);
+  setStepperState(c);
+}
+stepLarger?.addEventListener("click", () => stepCols(-1));
+stepSmaller?.addEventListener("click", () => stepCols(+1));
+
 function syncSlider() {
   const mc = maxCols();
   const c = currentCols();
@@ -702,6 +721,7 @@ function syncSlider() {
   gsRange.step = "any";          // つまみを段階でなく連続的に動かす（カクつき防止）
   gsRange.value = mc + 1 - c;    // 左端 = 最大カラム
   applyCols(c);
+  setStepperState(c);            // スマホのステッパーの有効/無効も同期
 }
 
 gsRange.addEventListener("input", () => {
@@ -710,6 +730,7 @@ gsRange.addEventListener("input", () => {
   const c = Math.min(Math.max(mc + 1 - Math.round(parseFloat(gsRange.value)), 1), mc);
   applyCols(c);
   lsSet("img-cols", c);
+  setStepperState(c);
 });
 
 // 指を離したら、対応するカラム位置（段）へつまみをスナップ → 中途半端な位置で止まらない

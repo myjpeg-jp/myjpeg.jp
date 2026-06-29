@@ -267,6 +267,24 @@ html, body {
   transition: opacity 0.2s ease;   /* スライダー操作時のクロスフェード */
 }
 
+/* ── Mobile thumbnail-size stepper (−/+) — フローティングのすりガラスピル ── */
+.grid-stepper { display: none; }   /* PC では非表示（フッターのスライダーを使う） */
+.grid-stepper button {
+  border: none; background: none; cursor: pointer;
+  color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  width: 48px; height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, transform 0.08s;
+}
+.grid-stepper button:active { transform: scale(0.9); }
+.grid-stepper button:disabled { color: var(--ink-mute); cursor: default; }
+.grid-stepper button:disabled:active { transform: none; }
+.grid-stepper .step-divider {
+  width: 0.5px; align-self: stretch; margin: 9px 0;
+  background: var(--card-border);
+}
+
 /* 空フォルダの控えめな表示 */
 .empty-note {
   grid-column: 1 / -1;
@@ -678,9 +696,25 @@ html, body {
     overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
-  .grid-slider { right: 14px; }
-  #gs-range { width: 86px; }
+  .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
   .copyright { font-size: 0.74rem; }
+
+  /* 写真一覧の時だけ、画面下部中央にステッパーをフローティング固定 */
+  body.view-images #grid-stepper {
+    display: inline-flex;
+    position: fixed;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: 500;
+    align-items: center;
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 0.5px solid var(--card-border);
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  }
 
   /* rounder corners overall on mobile */
   .nav-item { border-radius: 13px; }
