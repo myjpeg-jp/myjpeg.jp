@@ -418,6 +418,7 @@ function thumbW() {
 
 function renderImages(images) {
   lbImages = images;
+  imageView.style.minHeight = "";   // 前ビューの高さ予約が残らないようにクリア
   if (!images.length) {            // 空フォルダ
     imageView.innerHTML = `<p class="empty-note">No images</p>`;
     return;
@@ -656,6 +657,7 @@ function currentCols() {
 // 列数は :root に設定 → Overview・画像グリッド両方に効く。
 // サムネは FLIP で「実際に拡縮しながら」滑らかに動かす（瞬間的な組み替えにしない）。
 let _appliedCols = null;
+let _reserveTimer = null;   // Mobile: 列変更アニメ中だけグリッド高さを予約するタイマー
 function applyCols(c) {
   if (c === _appliedCols) return;        // 列数が変わらない時は何もしない（連続入力の無駄打ち防止）
   const prev = _appliedCols;
@@ -684,8 +686,20 @@ function applyCols(c) {
     if (!anchorEl) { anchorEl = icons[0]; anchorTop = first[0].top; }
   }
 
+  // Mobile（ページ全体スクロール）用に、変更前のグリッド高さを控えておく
+  const gridH0 = pageScroll ? imageView.getBoundingClientRect().height : 0;
+
   movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
+  // Mobile では列変更でグリッド高が急に縮むとページのスクロール位置がクランプされ、
+  // サイト全体がガクッと跳ねて見える。アニメ中だけ高さを「変更前後の大きい方」で固定して
+  // 急な伸縮を抑え、終わってから自然な高さに戻す（PC は内部スクロールなので無関係）。
+  if (pageScroll) {
+    const gridH1 = imageView.getBoundingClientRect().height;
+    imageView.style.minHeight = Math.max(gridH0, gridH1) + "px";
+    clearTimeout(_reserveTimer);
+    _reserveTimer = setTimeout(() => { imageView.style.minHeight = ""; }, 460);
+  }
   if (pageScroll && anchorEl) {
     const after = anchorEl.getBoundingClientRect().top;
     if (after !== anchorTop) window.scrollBy(0, after - anchorTop);
