@@ -69,7 +69,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
 html, body {
   height: 100%;
   color-scheme: light dark;
-  /* background: var(--bg); */
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
   font-size: 16px;                 /* 1rem = 16px → rem multiples hit HIG pt sizes */
@@ -95,7 +95,7 @@ html, body {
   overflow-y: auto;
   z-index: 20;
   /* floating translucent card */
-  /* background: var(--sidebar-bg); */
+  background: var(--sidebar-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--card-radius);
   backdrop-filter: blur(20px);
@@ -208,7 +208,7 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;                 /* clip footer to rounded corners */
-  /* background: var(--main-bg); */
+  background: var(--main-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--card-radius);
   min-width: 0;
