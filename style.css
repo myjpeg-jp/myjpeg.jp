@@ -18,7 +18,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
    ────────────────────────────────────────────── */
 :root {
   /* layout */
-  --sidebar-w:     250px;
+  --sidebar-w:     286px;
   --sidebar-inset: 12px;
   --card-radius:   20px;
   --radius-item:   11px;
