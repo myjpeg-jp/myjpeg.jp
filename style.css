@@ -362,6 +362,8 @@ html, body {
   display: block;
   width: 100%;
   height: auto;
+  border-radius: inherit;               /* 画像自身も角丸に（iOS で transform 中に親のクリップが
+                                           一瞬外れて角がチラつくのを防ぐ） */
   opacity: 0;                           /* 読み込み完了でフェードイン */
   transition: opacity 0.4s ease;
 }
