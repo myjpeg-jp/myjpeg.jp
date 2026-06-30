@@ -237,8 +237,8 @@ function fallbackSections() {
       .map(f => ({ id: f.id, name: f.name, marker: f.marker, images: f.images || [] })),
   });
   return [
-    mk("Selected Work", "All Work", "all", "selected-work"),
-    mk("Experiments", "All Experiments", "all-exp", "experiments"),
+    mk("Selected Work", "(all) Work", "all", "selected-work"),
+    mk("Experiments", "(all) Experiments", "all-exp", "experiments"),
   ];
 }
 function findFolder(id) {
