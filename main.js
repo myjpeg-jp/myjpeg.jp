@@ -498,8 +498,6 @@ async function route(view) {
   if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
   renderImages(arrays.flat());
   playFadeIn(imageView);
-  // レイアウト確定後に Safari のバー表示を再判定させる（グレー帯対策）
-  requestAnimationFrame(() => requestAnimationFrame(nudgeSafariBars));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -546,26 +544,6 @@ function unlockScroll() {
   document.body.style.right = "";
   window.scrollTo(0, lockedScrollY);
   scrollLocked = false;
-}
-// iOS 26 Safari 対策：読み込み直後は fixed のアプリシェル（非スクロール）で始まるため、
-// Safari が「スクロールしないページ」と判定し、下部タブバーの背後にページ背景色（--bg）の
-// 帯を敷いたままになる。写真一覧（ページ全体スクロール）に切り替わっても再判定されない。
-// プレビュー開閉（lockScroll/unlockScroll）で直る＝body の position を一瞬切り替えると
-// Safari が再判定する、という実測に基づき、同じトグルを写真一覧の表示後に自動で行う。
-function nudgeSafariBars() {
-  if (window.innerWidth > MOBILE_BP) return;
-  if (!document.body.classList.contains("view-images")) return;
-  if (scrollLocked) return;                    // プレビュー表示中は触らない
-  const y = window.scrollY;
-  const b = document.body.style;
-  b.position = "fixed"; b.top = `-${y}px`; b.left = "0"; b.right = "0";
-  // プレビュー開閉と同様に、fixed の状態を複数フレーム維持してから戻す
-  // （1フレームの切替では Safari が再判定しなかったため）
-  setTimeout(() => {
-    if (scrollLocked) return;
-    b.position = ""; b.top = ""; b.left = ""; b.right = "";
-    window.scrollTo(0, y);
-  }, 250);
 }
 function openLightbox(i) {
   if (!lbImages.length) return;
