@@ -738,11 +738,14 @@ function applyCols(c) {
 
   // 角丸の処理:
   //  PC   … border-radius を逆補正してアニメ（従来通り）。
-  //  スマホ … 角丸は CSS 側で常時 clip-path（GPU マスク）として定義してある。
-  //          マスクは transform と一緒に滑らかにスケールされ、border-radius の
-  //          ような再ラスタライズのガクつきが出ないため、ここでは transform を
-  //          設定するだけでよい（アニメ中のスタイル書き換えゼロ＝最小負荷）。
+  //  スマホ … 角丸は CSS 側で常時 clip-path（GPU マスク）。アニメ中はマスク半径を
+  //          スケール分だけ逆補正した値をインラインで与え、transform と一緒に
+  //          既定値（--thumb-radius）へ遷移させる＝見た目の角丸が一定に保たれる。
+  //          終了時はインラインを外すだけで CSS の既定値に戻るため掃除は不要。
   const R = isMobile ? 0 : (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0);
+  const MR = (isMobile && typeof CSS !== "undefined" && CSS.supports("clip-path", "inset(0 round 1px)"))
+    ? (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0)
+    : 0;
 
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
@@ -753,6 +756,7 @@ function applyCols(c) {
     if (scaled.has(el)) {
       el.style.transform = `${move} scale(${sx}, ${sy})`;
       if (R) el.style.borderRadius = (R / sx) + "px";
+      else if (MR) el.style.clipPath = `inset(0 round ${MR / sx}px / ${MR / sy}px)`;
     } else {
       el.style.transform = move;
     }
@@ -760,11 +764,14 @@ function applyCols(c) {
   requestAnimationFrame(() => {
     const trans = R
       ? "transform 0.42s var(--ease), border-radius 0.42s var(--ease)"
-      : "transform 0.42s var(--ease)";
+      : MR
+        ? "transform 0.42s var(--ease), clip-path 0.42s var(--ease)"
+        : "transform 0.42s var(--ease)";
     movers.forEach(el => {
       el.style.transition = trans;
       el.style.transform = "";
       if (R) el.style.borderRadius = "";
+      else if (MR && scaled.has(el)) el.style.clipPath = "";
     });
   });
 }
