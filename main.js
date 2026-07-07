@@ -237,8 +237,8 @@ function fallbackSections() {
       .map(f => ({ id: f.id, name: f.name, marker: f.marker, images: f.images || [] })),
   });
   return [
-    mk("Selected Work", "(all) Work", "all", "selected-work"),
-    mk("Experiments", "(all) Experiments", "all-exp", "experiments"),
+    mk("Selected Work", "All Work", "all", "selected-work"),
+    mk("Experiments", "All Experiments", "all-exp", "experiments"),
   ];
 }
 function findFolder(id) {
@@ -418,8 +418,6 @@ function thumbW() {
 
 function renderImages(images) {
   lbImages = images;
-  document.body.classList.remove("booting");  // 読込中の高さ予約を解除（iOS 帯対策）
-  imageView.style.minHeight = "";   // 前ビューの高さ予約が残らないようにクリア
   if (!images.length) {            // 空フォルダ
     imageView.innerHTML = `<p class="empty-note">No images</p>`;
     return;
@@ -462,7 +460,7 @@ function showOverview() {
   overviewView.classList.remove("hidden");
   imageView.classList.add("hidden");
   gridSlider.classList.add("hidden");        // slider only for thumbnails
-  document.body.classList.remove("view-images", "booting");
+  document.body.classList.remove("view-images");
 }
 function showImages() {
   overviewView.classList.add("hidden");
@@ -499,8 +497,6 @@ async function route(view) {
   if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
   renderImages(arrays.flat());
   playFadeIn(imageView);
-  // Overview から遷移してきた場合、帯が確定したままなので再評価を促す
-  requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -548,28 +544,6 @@ function unlockScroll() {
   window.scrollTo(0, lockedScrollY);
   scrollLocked = false;
 }
-// iOS 26 の帯対策（ページ内遷移用）：Overview（固定シェル＝スクロール不可）の間に
-// Safari がタブバー裏の不透過の帯を確定させると、写真一覧へ遷移しても再評価されない。
-// 実測で「プレビュー開閉をすると帯が消える」ことが分かっているため、その状態
-// （全画面の固定オーバーレイ + body スクロールロック）を不可視で短時間再現する。
-function refreshBarTransparency() {
-  if (window.innerWidth > MOBILE_BP) return;
-  if (!document.body.classList.contains("view-images")) return;
-  if (scrollLocked) return;                  // 実際のプレビュー表示中は不要
-  const ov = document.createElement("div");
-  ov.style.cssText =
-    "position:fixed;inset:0;pointer-events:none;z-index:2000;" +
-    "background:rgba(0,0,0,0.001);" +
-    "-webkit-backdrop-filter:blur(0.5px);backdrop-filter:blur(0.5px);";
-  document.body.appendChild(ov);
-  lockScroll();
-  setTimeout(() => {
-    // この間にユーザーが実際にプレビューを開いていたら、解除は closeLightbox に任せる
-    if (!lightbox.classList.contains("open")) unlockScroll();
-    ov.remove();
-  }, 450);
-}
-
 function openLightbox(i) {
   if (!lbImages.length) return;
   lbReturnFocus = document.activeElement; // 開く前のフォーカス位置を記憶
@@ -682,8 +656,6 @@ function currentCols() {
 // 列数は :root に設定 → Overview・画像グリッド両方に効く。
 // サムネは FLIP で「実際に拡縮しながら」滑らかに動かす（瞬間的な組み替えにしない）。
 let _appliedCols = null;
-let _reserveTimer = null;   // Mobile: 列変更アニメ中だけグリッド高さを予約するタイマー
-let _clipTimer = null;      // Mobile: アニメ後に clip-path を掃除するタイマー
 function applyCols(c) {
   if (c === _appliedCols) return;        // 列数が変わらない時は何もしない（連続入力の無駄打ち防止）
   const prev = _appliedCols;
@@ -712,37 +684,17 @@ function applyCols(c) {
     if (!anchorEl) { anchorEl = icons[0]; anchorTop = first[0].top; }
   }
 
-  // Mobile（ページ全体スクロール）用に、変更前のグリッド高さを控えておく
-  const gridH0 = pageScroll ? imageView.getBoundingClientRect().height : 0;
-
   movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
-  // Mobile では列変更でグリッド高が急に縮むとページのスクロール位置がクランプされ、
-  // サイト全体がガクッと跳ねて見える。アニメ中だけ高さを「変更前後の大きい方」で固定して
-  // 急な伸縮を抑え、終わってから自然な高さに戻す（PC は内部スクロールなので無関係）。
-  if (pageScroll) {
-    const gridH1 = imageView.getBoundingClientRect().height;
-    imageView.style.minHeight = Math.max(gridH0, gridH1) + "px";
-    clearTimeout(_reserveTimer);
-    _reserveTimer = setTimeout(() => { imageView.style.minHeight = ""; }, 460);
-  }
   if (pageScroll && anchorEl) {
     const after = anchorEl.getBoundingClientRect().top;
     if (after !== anchorTop) window.scrollBy(0, after - anchorTop);
   }
   const last = movers.map(el => el.getBoundingClientRect());
 
-  // 角丸の処理:
-  //  PC   … border-radius を逆補正してアニメ（従来通り）。
-  //  スマホ … border-radius は scale 中に再ラスタライズされて角がガクつくため、
-  //          アニメ中だけ角丸を clip-path（GPU 側のマスク）に差し替える。
-  //          マスクは transform と一緒に滑らかにスケールされるので、毎フレームの
-  //          スタイル更新（メインスレッド負荷）なしで角の安定が得られる。
-  //          ※ clip-path 自体はアニメさせない＝合成スレッドだけで完結。
-  const R = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0;
-  const useClip = isMobile && R > 0 &&
-    typeof CSS !== "undefined" && CSS.supports("clip-path", "inset(0 round 1px)");
-  const usePC = !isMobile && R > 0;
+  // 角丸の逆補正は PC のみ。iOS では border-radius のアニメが毎フレーム再描画されチラつくため、
+  // スマホでは補正しない（角丸は transform と一緒に GPU で滑らかにスケールされる）。
+  const R = isMobile ? 0 : (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0);
 
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
@@ -752,36 +704,21 @@ function applyCols(c) {
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
     if (scaled.has(el)) {
       el.style.transform = `${move} scale(${sx}, ${sy})`;
-      if (useClip) {
-        el.style.borderRadius = "0px";   // 二重クリップ回避（img は inherit で 0 に）
-        el.style.clipPath = `inset(0 round ${R}px)`;
-      } else if (usePC) {
-        el.style.borderRadius = (R / sx) + "px";
-      }
+      if (R) el.style.borderRadius = (R / sx) + "px";
     } else {
       el.style.transform = move;
     }
   });
   requestAnimationFrame(() => {
-    const trans = usePC
+    const trans = R
       ? "transform 0.42s var(--ease), border-radius 0.42s var(--ease)"
       : "transform 0.42s var(--ease)";
     movers.forEach(el => {
       el.style.transition = trans;
       el.style.transform = "";
-      if (usePC && scaled.has(el)) el.style.borderRadius = "";
+      if (R) el.style.borderRadius = "";
     });
   });
-  // アニメ終了後に clip-path を外し、通常の border-radius クリップへ戻す
-  // （終了時は両者とも半径 R なので見た目は変わらない）
-  if (useClip) {
-    clearTimeout(_clipTimer);
-    _clipTimer = setTimeout(() => {
-      icons.forEach(el => {
-        el.style.clipPath = ""; el.style.borderRadius = "";
-      });
-    }, 460);
-  }
 }
 
 // スマホ用：1ボタンのカラム調整（端で向きが反転するバウンス式）
