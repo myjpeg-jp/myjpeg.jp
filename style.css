@@ -711,22 +711,20 @@ html, body {
     overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
   }
   /* iOS 26: タブバー領域（下部の帯）はページの「キャンバス背景色」
-     （html/body の背景）で塗られ、fixed 要素の色は反映されない。
-     そこで写真一覧ではキャンバス自体をカードと同じ白にして帯を白にし、
-     可視領域のグレー背景は z-index:-1 の固定レイヤーで従来通り維持する。
-     （上＝グレー / 下＝白 の2色分割。ステータスバー側は固定レイヤーの
-     グレーが引き続き使われる） */
-  @supports selector(html:has(body)) {
-    html:has(body.view-images) { background: var(--main-bg); }
-    body.view-images { background: var(--main-bg); }
-    body.view-images::after {
-      content: "";
-      position: fixed;
-      left: 0; right: 0; bottom: 0; top: -120vh;  /* 上方向は引っぱり時の余白もグレーに */
-      background: var(--bg);
-      pointer-events: none;
-      z-index: -1;
-    }
+     （html/body の背景）で塗られ、fixed 要素の色は反映されない。さらに
+     ページ読み込み時点の色が使われ続けるため、後からクラスで切り替えても
+     帯には反映されない。そこでモバイルでは最初からキャンバスをカードと
+     同じ白にして帯を白にし、画面内のグレー背景は z-index:-1 の固定レイヤー
+     で従来通り描画する（上＝グレー / 下＝白 の2色分割。ステータスバー側は
+     固定レイヤーのグレーが引き続き使われる） */
+  html, body { background: var(--main-bg); }
+  body::after {
+    content: "";
+    position: fixed;
+    left: 0; right: 0; bottom: 0; top: -120vh;  /* 上方向は引っぱり時の余白もグレーに */
+    background: var(--bg);
+    pointer-events: none;
+    z-index: -1;
   }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
