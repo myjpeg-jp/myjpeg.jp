@@ -683,7 +683,6 @@ function currentCols() {
 // サムネは FLIP で「実際に拡縮しながら」滑らかに動かす（瞬間的な組み替えにしない）。
 let _appliedCols = null;
 let _reserveTimer = null;   // Mobile: 列変更アニメ中だけグリッド高さを予約するタイマー
-let _clipTimer = null;      // Mobile: アニメ後に clip-path を掃除するタイマー
 function applyCols(c) {
   if (c === _appliedCols) return;        // 列数が変わらない時は何もしない（連続入力の無駄打ち防止）
   const prev = _appliedCols;
@@ -734,15 +733,11 @@ function applyCols(c) {
 
   // 角丸の処理:
   //  PC   … border-radius を逆補正してアニメ（従来通り）。
-  //  スマホ … border-radius は scale 中に再ラスタライズされて角がガクつくため、
-  //          アニメ中だけ角丸を clip-path（GPU 側のマスク）に差し替える。
-  //          マスクは transform と一緒に滑らかにスケールされるので、毎フレームの
-  //          スタイル更新（メインスレッド負荷）なしで角の安定が得られる。
-  //          ※ clip-path 自体はアニメさせない＝合成スレッドだけで完結。
-  const R = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0;
-  const useClip = isMobile && R > 0 &&
-    typeof CSS !== "undefined" && CSS.supports("clip-path", "inset(0 round 1px)");
-  const usePC = !isMobile && R > 0;
+  //  スマホ … 角丸は CSS 側で常時 clip-path（GPU マスク）として定義してある。
+  //          マスクは transform と一緒に滑らかにスケールされ、border-radius の
+  //          ような再ラスタライズのガクつきが出ないため、ここでは transform を
+  //          設定するだけでよい（アニメ中のスタイル書き換えゼロ＝最小負荷）。
+  const R = isMobile ? 0 : (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0);
 
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
@@ -752,36 +747,21 @@ function applyCols(c) {
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
     if (scaled.has(el)) {
       el.style.transform = `${move} scale(${sx}, ${sy})`;
-      if (useClip) {
-        el.style.borderRadius = "0px";   // 二重クリップ回避（img は inherit で 0 に）
-        el.style.clipPath = `inset(0 round ${R}px)`;
-      } else if (usePC) {
-        el.style.borderRadius = (R / sx) + "px";
-      }
+      if (R) el.style.borderRadius = (R / sx) + "px";
     } else {
       el.style.transform = move;
     }
   });
   requestAnimationFrame(() => {
-    const trans = usePC
+    const trans = R
       ? "transform 0.42s var(--ease), border-radius 0.42s var(--ease)"
       : "transform 0.42s var(--ease)";
     movers.forEach(el => {
       el.style.transition = trans;
       el.style.transform = "";
-      if (usePC && scaled.has(el)) el.style.borderRadius = "";
+      if (R) el.style.borderRadius = "";
     });
   });
-  // アニメ終了後に clip-path を外し、通常の border-radius クリップへ戻す
-  // （終了時は両者とも半径 R なので見た目は変わらない）
-  if (useClip) {
-    clearTimeout(_clipTimer);
-    _clipTimer = setTimeout(() => {
-      icons.forEach(el => {
-        el.style.clipPath = ""; el.style.borderRadius = "";
-      });
-    }, 460);
-  }
 }
 
 // スマホ用：1ボタンのカラム調整（端で向きが反転するバウンス式）

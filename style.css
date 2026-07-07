@@ -738,6 +738,19 @@ html, body {
   /* rounder corners overall on mobile */
   .nav-item { border-radius: 13px; }
 
+  /* サムネの角丸: スマホでは border-radius ではなく clip-path（GPU マスク）で作る。
+     border-radius は transform: scale 中に再ラスタライズされて角がガクつくが、
+     マスクは transform と一緒に滑らかにスケールされる。カラム変更時の JS も
+     transform を設定するだけで済む（アニメ中のスタイル書き換え不要）。
+     ※ clip-path は影も切り取るため box-shadow は無効化 */
+  @supports (clip-path: inset(0 round 1px)) {
+    .photo-cell .cell-icon {
+      border-radius: 0;
+      clip-path: inset(0 round var(--thumb-radius));
+      box-shadow: none;
+    }
+  }
+
   /* 画像グリッド: メインエリアのマージン(10px)に合わせる */
   .finder-grid { gap: 20px; }
 
