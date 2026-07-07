@@ -559,11 +559,13 @@ function nudgeSafariBars() {
   const y = window.scrollY;
   const b = document.body.style;
   b.position = "fixed"; b.top = `-${y}px`; b.left = "0"; b.right = "0";
-  requestAnimationFrame(() => {
+  // プレビュー開閉と同様に、fixed の状態を複数フレーム維持してから戻す
+  // （1フレームの切替では Safari が再判定しなかったため）
+  setTimeout(() => {
     if (scrollLocked) return;
     b.position = ""; b.top = ""; b.left = ""; b.right = "";
     window.scrollTo(0, y);
-  });
+  }, 250);
 }
 function openLightbox(i) {
   if (!lbImages.length) return;
