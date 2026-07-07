@@ -717,13 +717,18 @@ function applyCols(c) {
   movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
   // Mobile では列変更でグリッド高が急に縮むとページのスクロール位置がクランプされ、
-  // サイト全体がガクッと跳ねて見える。アニメ中だけ高さを「変更前後の大きい方」で固定して
-  // 急な伸縮を抑え、終わってから自然な高さに戻す（PC は内部スクロールなので無関係）。
-  if (pageScroll) {
+  // サイト全体がガクッと跳ねて見える。ただし高さ予約は毎ステップ余分な強制レイアウトを
+  // 生みアニメの滑らかさを削るため、クランプが実際に起き得る時（＝スクロール中で、
+  // かつ縮小でページが可視範囲より短くなる時）だけに限定する。
+  // ページ先頭での操作では何もしない＝従来どおりの最小負荷で動く。
+  if (pageScroll && window.scrollY > 0) {
     const gridH1 = imageView.getBoundingClientRect().height;
-    imageView.style.minHeight = Math.max(gridH0, gridH1) + "px";
-    clearTimeout(_reserveTimer);
-    _reserveTimer = setTimeout(() => { imageView.style.minHeight = ""; }, 460);
+    if (gridH1 < gridH0 &&
+        window.scrollY + window.innerHeight > document.documentElement.scrollHeight) {
+      imageView.style.minHeight = gridH0 + "px";
+      clearTimeout(_reserveTimer);
+      _reserveTimer = setTimeout(() => { imageView.style.minHeight = ""; }, 460);
+    }
   }
   if (pageScroll && anchorEl) {
     const after = anchorEl.getBoundingClientRect().top;
