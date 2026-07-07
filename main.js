@@ -740,7 +740,7 @@ function applyCols(c) {
         window.scrollY + window.innerHeight > document.documentElement.scrollHeight) {
       imageView.style.minHeight = gridH0 + "px";
       clearTimeout(_reserveTimer);
-      _reserveTimer = setTimeout(() => { imageView.style.minHeight = ""; }, 460);
+      _reserveTimer = setTimeout(() => { imageView.style.minHeight = ""; }, 680);  // アニメ(0.55s)+余裕
     }
   }
   if (pageScroll && anchorEl) {
@@ -760,6 +760,10 @@ function applyCols(c) {
     ? (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--thumb-radius")) || 0)
     : 0;
 
+  // アニメの長さ: スマホは列数が少なく1ステップの移動・拡縮が大きい分、
+  // 少し長めにして余韻を持たせる（PC は従来通り）
+  const DUR = isMobile ? "0.55s" : "0.42s";
+
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
@@ -776,10 +780,10 @@ function applyCols(c) {
   });
   requestAnimationFrame(() => {
     const trans = R
-      ? "transform 0.42s var(--ease), border-radius 0.42s var(--ease)"
+      ? `transform ${DUR} var(--ease), border-radius ${DUR} var(--ease)`
       : MR
-        ? "transform 0.42s var(--ease), clip-path 0.42s var(--ease)"
-        : "transform 0.42s var(--ease)";
+        ? `transform ${DUR} var(--ease), clip-path ${DUR} var(--ease)`
+        : `transform ${DUR} var(--ease)`;
     movers.forEach(el => {
       el.style.transition = trans;
       el.style.transform = "";
