@@ -575,10 +575,18 @@ function refreshBarTransparency() {
   }, 450);
 }
 
+// プレビュー中の背景スクロール防止。
+// 注意: lockScroll（body を position:fixed にする方式）はドキュメントを一時的に
+// 「スクロール不可」へ変えるため、iOS 26 がその瞬間にタブバー裏の不透過帯を
+// 確定させてしまう。そこで body には触れず、プレビュー上の1本指ドラッグだけを
+// 止めて背景スクロールを防ぐ（2本指は残す＝画像のピンチズームは可能なまま）。
+lightbox.addEventListener("touchmove", e => {
+  if (e.touches.length === 1) e.preventDefault();
+}, { passive: false });
+
 function openLightbox(i) {
   if (!lbImages.length) return;
   lbReturnFocus = document.activeElement; // 開く前のフォーカス位置を記憶
-  lockScroll();                           // 背景スクロールをロック
   // 前の画像を「フェードさせず即座に」隠す（A→閉じる→B でAがチラ見えするのを防ぐ）
   lbImg.style.transition = "none";
   lbImg.classList.remove("shown");
@@ -600,7 +608,6 @@ function openLightbox(i) {
 }
 function closeLightbox() {
   lightbox.classList.remove("open");
-  unlockScroll();                                                  // 背景スクロールのロック解除
   if (lbReturnFocus && lbReturnFocus.focus) lbReturnFocus.focus();  // 元の位置へフォーカスを戻す
 }
 // 前後送り：方向に合わせて左右へスライド＋フェード
