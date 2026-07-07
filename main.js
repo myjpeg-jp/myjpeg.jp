@@ -185,10 +185,15 @@ const sidebar      = document.querySelector(".sidebar");
 const menuToggle   = document.getElementById("menu-toggle");
 const pagesScroll  = document.querySelector(".pages-scroll");
 
-// 可視領域の高さ（iOS Safari のツールバーを除いた実寸）を CSS 変数に反映
+// 可視領域の高さ（iOS Safari のツールバーを除いた実寸）を CSS 変数に反映。
+// visualViewport の scroll はスクロール中ずっと発火するため、値が実際に
+// 変わった時だけ書き込む（毎回書くとスクロール中に無駄なスタイル再計算が走る）
+let _vvhLast = 0;
 function setVVH() {
-  const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  document.documentElement.style.setProperty("--vvh", Math.round(h) + "px");
+  const h = Math.round((window.visualViewport && window.visualViewport.height) || window.innerHeight);
+  if (h === _vvhLast) return;
+  _vvhLast = h;
+  document.documentElement.style.setProperty("--vvh", h + "px");
 }
 setVVH();
 if (window.visualViewport) {
@@ -435,7 +440,7 @@ function renderImages(images) {
     return `
     <div class="cell photo-cell" title="${name}">
       <div class="cell-icon"${style ? ` style="${style}"` : ""}>
-        <img src="${sized(img.url, tw)}" loading="lazy" alt="${name}">
+        <img src="${sized(img.url, tw)}" loading="lazy" decoding="async" alt="${name}">
       </div>
       <span class="cell-caption">${dotSpan(img.marker)}${name}</span>
     </div>`;
@@ -712,7 +717,8 @@ function applyCols(c) {
   }
 
   // Mobile（ページ全体スクロール）用に、変更前のグリッド高さを控えておく
-  const gridH0 = pageScroll ? imageView.getBoundingClientRect().height : 0;
+  // （使うのはスクロール中の縮小クランプ対策の時だけなので、その条件に合わせる）
+  const gridH0 = (pageScroll && window.scrollY > 0) ? imageView.getBoundingClientRect().height : 0;
 
   movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
@@ -893,6 +899,16 @@ document.querySelector(".tl-green")?.addEventListener("click", () => go(sections
 const footerClock = document.getElementById("footer-clock");
 const pad = (n, len = 2) => String(n).padStart(len, "0");
 
+// 時計はフッターが画面内にある時だけ更新する。毎フレームの textContent 書き換えは
+// 常時ペイントを発生させ、写真一覧（フッターが画面外）ではまるごと無駄になる上、
+// カラム変更アニメ等とメインスレッドを取り合うため。
+let _clockVisible = true;
+if ("IntersectionObserver" in window) {
+  _clockVisible = false;
+  new IntersectionObserver(es => { _clockVisible = es[0].isIntersecting; })
+    .observe(footerClock);
+}
+
 function tzLabel() {
   const off = -new Date().getTimezoneOffset();   // minutes east of UTC (JST = +540)
   const sign = off >= 0 ? "+" : "-";
@@ -902,12 +918,14 @@ function tzLabel() {
 }
 
 function tickClock() {
-  // PC・スマホ共通のフルタイムスタンプ
-  const d = new Date();
-  footerClock.textContent =
-    `© ${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_` +
-    `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}` +
-    `_${tzLabel()} MYJPEG.JP`;
+  if (_clockVisible) {
+    // PC・スマホ共通のフルタイムスタンプ
+    const d = new Date();
+    footerClock.textContent =
+      `© ${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_` +
+      `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}` +
+      `_${tzLabel()} MYJPEG.JP`;
+  }
   requestAnimationFrame(tickClock);
 }
 tickClock();
