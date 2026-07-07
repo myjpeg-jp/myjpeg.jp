@@ -697,7 +697,10 @@ html, body {
     position: static;
     height: auto;
     min-height: 100vh;
-    min-height: 100svh;
+    /* svh だと「ページが可視領域に収まる」と Safari が判定し、タブバー背後に
+       ページ背景色のグレー帯を敷くことがある。lvh（バー最小時の大きい方の
+       ビューポート）にして、常にバーの裏まで届く高さを確保する（iOS 26 対策） */
+    min-height: 100lvh;
     overflow: visible;
   }
   body.view-images .pages {
