@@ -499,6 +499,8 @@ async function route(view) {
   if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
   renderImages(arrays.flat());
   playFadeIn(imageView);
+  // Overview から遷移してきた場合、帯が確定したままなので再評価を促す
+  requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -546,6 +548,28 @@ function unlockScroll() {
   window.scrollTo(0, lockedScrollY);
   scrollLocked = false;
 }
+// iOS 26 の帯対策（ページ内遷移用）：Overview（固定シェル＝スクロール不可）の間に
+// Safari がタブバー裏の不透過の帯を確定させると、写真一覧へ遷移しても再評価されない。
+// 実測で「プレビュー開閉をすると帯が消える」ことが分かっているため、その状態
+// （全画面の固定オーバーレイ + body スクロールロック）を不可視で短時間再現する。
+function refreshBarTransparency() {
+  if (window.innerWidth > MOBILE_BP) return;
+  if (!document.body.classList.contains("view-images")) return;
+  if (scrollLocked) return;                  // 実際のプレビュー表示中は不要
+  const ov = document.createElement("div");
+  ov.style.cssText =
+    "position:fixed;inset:0;pointer-events:none;z-index:2000;" +
+    "background:rgba(0,0,0,0.001);" +
+    "-webkit-backdrop-filter:blur(0.5px);backdrop-filter:blur(0.5px);";
+  document.body.appendChild(ov);
+  lockScroll();
+  setTimeout(() => {
+    // この間にユーザーが実際にプレビューを開いていたら、解除は closeLightbox に任せる
+    if (!lightbox.classList.contains("open")) unlockScroll();
+    ov.remove();
+  }, 450);
+}
+
 function openLightbox(i) {
   if (!lbImages.length) return;
   lbReturnFocus = document.activeElement; // 開く前のフォーカス位置を記憶
