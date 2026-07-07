@@ -710,22 +710,12 @@ html, body {
   body.view-images .pages-scroll {
     overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
   }
-  /* iOS 26: タブバー領域（下部の帯）はページの「キャンバス背景色」
-     （html/body の背景）で塗られ、fixed 要素の色は反映されない。さらに
-     ページ読み込み時点の色が使われ続けるため、後からクラスで切り替えても
-     帯には反映されない。そこでモバイルでは最初からキャンバスをカードと
-     同じ白にして帯を白にし、画面内のグレー背景は z-index:-1 の固定レイヤー
-     で従来通り描画する（上＝グレー / 下＝白 の2色分割。ステータスバー側は
-     固定レイヤーのグレーが引き続き使われる） */
-  html, body { background: var(--main-bg); }
-  body::after {
-    content: "";
-    position: fixed;
-    left: 0; right: 0; bottom: 0; top: -120vh;  /* 上方向は引っぱり時の余白もグレーに */
-    background: var(--bg);
-    pointer-events: none;
-    z-index: -1;
-  }
+  /* iOS 26 の帯対策：直リンクで写真一覧を開いた時、サムネイル読込前でも
+     ページを画面より高くしておく。読み込みの瞬間に「高さ＝画面ぴったり・
+     スクロール不可」だと、Safari がその時点でタブバー裏に不透過の帯を
+     確定させてしまうため。.booting は index.html のインラインスクリプトが
+     初回描画前に付け、サムネイル描画後（renderImages）に外れる */
+  body.view-images.booting .pages-scroll { min-height: 150vh; }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
   .copyright { font-size: 0.74rem; }

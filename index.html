@@ -38,6 +38,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- iOS 26 の帯対策：写真一覧への直リンク時は「最初の描画の時点で」
+       ページ全体スクロールのレイアウトにしておく（main.js のルーティングを
+       待つと、その間の "高さ＝画面ぴったり" の状態で Safari がタブバー裏の
+       不透過の帯を確定させてしまうため）。.booting は読込中の高さ予約用 -->
+  <script>
+    (function () {
+      var h = decodeURIComponent(location.hash.replace(/^#/, ""));
+      if (h && h !== "overview") document.body.classList.add("view-images", "booting");
+    })();
+  </script>
   <div class="content-wrap">
 
     <!-- ── Sidebar (fixed) ── -->

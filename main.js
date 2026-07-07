@@ -418,6 +418,7 @@ function thumbW() {
 
 function renderImages(images) {
   lbImages = images;
+  document.body.classList.remove("booting");  // 読込中の高さ予約を解除（iOS 帯対策）
   imageView.style.minHeight = "";   // 前ビューの高さ予約が残らないようにクリア
   if (!images.length) {            // 空フォルダ
     imageView.innerHTML = `<p class="empty-note">No images</p>`;
@@ -461,7 +462,7 @@ function showOverview() {
   overviewView.classList.remove("hidden");
   imageView.classList.add("hidden");
   gridSlider.classList.add("hidden");        // slider only for thumbnails
-  document.body.classList.remove("view-images");
+  document.body.classList.remove("view-images", "booting");
 }
 function showImages() {
   overviewView.classList.add("hidden");
