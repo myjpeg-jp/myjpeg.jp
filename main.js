@@ -783,6 +783,9 @@ function applyCols(c) {
   _flipPrev = new Set(anim.map(a => a[0]));
 
   anim.forEach(([el, f, l]) => {
+    // CSS 既定のホバー用 transition（や前回の残り）が開始状態の適用を
+    // 遷移扱いにしてしまわないよう、必ず無効化してから開始位置を書く
+    el.style.transition = "none";
     el.style.transformOrigin = "top left";
     const sx = f.width / l.width, sy = f.height / l.height;
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
