@@ -430,7 +430,7 @@ function renderImages(images) {
     return;
   }
   const tw = thumbW();
-  imageView.innerHTML = images.map(img => {
+  imageView.innerHTML = images.map((img, i) => {
     const ar = imgAspect(img);
     const blur = blurURL(img.url);
     const style =
@@ -438,7 +438,7 @@ function renderImages(images) {
       (blur ? `background-image:url('${blur}');` : "");
     const name = esc(img.name || "");
     return `
-    <div class="cell photo-cell" title="${name}">
+    <div class="cell photo-cell" data-i="${i}" title="${name}">
       <div class="cell-icon"${style ? ` style="${style}"` : ""}>
         <img src="${sized(img.url, tw)}" loading="lazy" decoding="async" alt="${name}">
       </div>
@@ -446,13 +446,22 @@ function renderImages(images) {
     </div>`;
   }).join("");
 
-  imageView.querySelectorAll(".photo-cell img").forEach((im, i) => {
-    im.addEventListener("click", () => openLightbox(i));
-    // 読み込み完了でフェードイン（キャッシュ済みは即時）
+  // キャッシュ済み画像は即時フェードイン（未読込分は下の委譲 load リスナーが処理）
+  imageView.querySelectorAll(".photo-cell img").forEach(im => {
     if (im.complete && im.naturalWidth) im.classList.add("is-loaded");
-    else im.addEventListener("load", () => im.classList.add("is-loaded"), { once: true });
   });
 }
+
+// クリックと読み込み完了はセルごとではなく imageView への委譲で一括処理する
+// （200枚規模でも描画のたびに大量のリスナーを張り直さない）
+imageView.addEventListener("click", e => {
+  if (!e.target.matches(".photo-cell .cell-icon img")) return;
+  const cell = e.target.closest(".photo-cell");
+  if (cell) openLightbox(parseInt(cell.dataset.i, 10) || 0);
+});
+imageView.addEventListener("load", e => {
+  if (e.target.matches?.(".photo-cell img")) e.target.classList.add("is-loaded");
+}, true);   // load はバブリングしないためキャプチャで受ける
 
 // ═══════════════════════════════════════════════════════════
 //  ROUTING
@@ -477,11 +486,12 @@ function showImages() {
 }
 
 let routeSeq = 0;
+let _prevViewPhotos = false;   // 直前のビューが写真一覧だったか（帯の再判定の要否に使う）
 async function route(view) {
   const seq = ++routeSeq;
   setActive(view);
 
-  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); return; }
+  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); _prevViewPhotos = false; return; }
 
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
@@ -504,8 +514,13 @@ async function route(view) {
   if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
   renderImages(arrays.flat());
   playFadeIn(imageView);
-  // Overview から遷移してきた場合、帯が確定したままなので再評価を促す
-  requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
+  // Overview（スクロール不可のシェル）から来た時だけ、帯の再判定が必要。
+  // 写真一覧→写真一覧はドキュメントがスクロール可能なままなので帯は形成されず、
+  // 再判定（450ms のスクロールロック）を毎回行うのは無駄になる。
+  if (!_prevViewPhotos) {
+    requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
+  }
+  _prevViewPhotos = true;
 }
 
 // ═══════════════════════════════════════════════════════════
