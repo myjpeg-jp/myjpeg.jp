@@ -771,7 +771,7 @@ function applyCols(c) {
   // 合成で激重になるため、「旧位置か新位置が画面付近にあるセル」だけを動かす。
   // 画面外→画面外の移動は見えないので、瞬時配置でも見た目は変わらない。
   const vh = window.innerHeight;
-  const near = r => r.bottom > -vh * 0.5 && r.top < vh * 1.5;   // 画面±0.5画面分
+  const near = r => r.bottom > -vh * 1.5 && r.top < vh * 2.5;   // 画面±1.5画面分
 
   const anim = [];   // [el, first, last]
   movers.forEach((el, i) => {
