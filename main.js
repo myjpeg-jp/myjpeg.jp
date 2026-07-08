@@ -695,6 +695,7 @@ function currentCols() {
 // サムネは FLIP で「実際に拡縮しながら」滑らかに動かす（瞬間的な組み替えにしない）。
 let _appliedCols = null;
 let _reserveTimer = null;   // Mobile: 列変更アニメ中だけグリッド高さを予約するタイマー
+let _flipPrev = new Set();  // 直前の列変更でアニメ対象だった要素（次回開始時の後始末用）
 function applyCols(c) {
   if (c === _appliedCols) return;        // 列数が変わらない時は何もしない（連続入力の無駄打ち防止）
   const prev = _appliedCols;
@@ -727,7 +728,8 @@ function applyCols(c) {
   // （使うのはスクロール中の縮小クランプ対策の時だけなので、その条件に合わせる）
   const gridH0 = (pageScroll && window.scrollY > 0) ? imageView.getBoundingClientRect().height : 0;
 
-  movers.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
+  // 前回アニメ対象だった要素だけ後始末する（全要素へのスタイル書き込みを避ける）
+  _flipPrev.forEach(el => { el.style.transition = "none"; el.style.transform = ""; });
   setVar();
   // Mobile では列変更でグリッド高が急に縮むとページのスクロール位置がクランプされ、
   // サイト全体がガクッと跳ねて見える。ただし高さ予約は毎ステップ余分な強制レイアウトを
@@ -764,9 +766,23 @@ function applyCols(c) {
   // 少し長めにして余韻を持たせる（PC は従来通り）
   const DUR = isMobile ? "0.55s" : "0.42s";
 
+  // 画面外のセルはアニメせず瞬時に新しい位置へ置く。
+  // 大量の写真（例: 200枚）で全セルをアニメさせると、要素ごとのレイヤー生成と
+  // 合成で激重になるため、「旧位置か新位置が画面付近にあるセル」だけを動かす。
+  // 画面外→画面外の移動は見えないので、瞬時配置でも見た目は変わらない。
+  const vh = window.innerHeight;
+  const near = r => r.bottom > -vh * 0.5 && r.top < vh * 1.5;   // 画面±0.5画面分
+
+  const anim = [];   // [el, first, last]
   movers.forEach((el, i) => {
     const f = first[i], l = last[i];
     if (!l.width || !l.height) return;
+    if (!near(f) && !near(l)) return;
+    anim.push([el, f, l]);
+  });
+  _flipPrev = new Set(anim.map(a => a[0]));
+
+  anim.forEach(([el, f, l]) => {
     el.style.transformOrigin = "top left";
     const sx = f.width / l.width, sy = f.height / l.height;
     const move = `translate(${f.left - l.left}px, ${f.top - l.top}px)`;
@@ -784,7 +800,7 @@ function applyCols(c) {
       : MR
         ? `transform ${DUR} var(--ease), clip-path ${DUR} var(--ease)`
         : `transform ${DUR} var(--ease)`;
-    movers.forEach(el => {
+    anim.forEach(([el]) => {
       el.style.transition = trans;
       el.style.transform = "";
       if (R) el.style.borderRadius = "";
