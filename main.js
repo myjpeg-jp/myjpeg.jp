@@ -794,18 +794,20 @@ function applyCols(c) {
       el.style.transform = move;
     }
   });
-  requestAnimationFrame(() => {
-    const trans = R
-      ? `transform ${DUR} var(--ease), border-radius ${DUR} var(--ease)`
-      : MR
-        ? `transform ${DUR} var(--ease), clip-path ${DUR} var(--ease)`
-        : `transform ${DUR} var(--ease)`;
-    anim.forEach(([el]) => {
-      el.style.transition = trans;
-      el.style.transform = "";
-      if (R) el.style.borderRadius = "";
-      else if (MR && scaled.has(el)) el.style.clipPath = "";
-    });
+  // 開始状態（旧位置への transform）を強制リフローで確定させてから遷移を開始する。
+  // rAF 任せだと、タスクが同一フレームの rAF フェーズ前に実行された場合に開始状態が
+  // 確定しないまま終了状態が書かれ、遷移せず瞬時に配置される（タイミング依存で時々発生）。
+  void imageView.offsetWidth;
+  const trans = R
+    ? `transform ${DUR} var(--ease), border-radius ${DUR} var(--ease)`
+    : MR
+      ? `transform ${DUR} var(--ease), clip-path ${DUR} var(--ease)`
+      : `transform ${DUR} var(--ease)`;
+  anim.forEach(([el]) => {
+    el.style.transition = trans;
+    el.style.transform = "";
+    if (R) el.style.borderRadius = "";
+    else if (MR && scaled.has(el)) el.style.clipPath = "";
   });
 }
 
