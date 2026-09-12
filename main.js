@@ -109,6 +109,20 @@ function navFolderGlyph() {
   </svg>`;
 }
 
+// Random 用シャッフル記号（assets/shuffle.svg）— 色は CSS の currentColor 任せ
+function navShuffleGlyph() {
+  return `<svg class="nav-glyph" viewBox="0 0 90.66 71.3" fill="currentColor" fill-rule="evenodd" aria-hidden="true">
+    <path d="M89.46,54.2l-14.65-12.3c-.54-.49-1.37-.78-2.1-.78-1.71,0-2.73.93-2.73,2.64v8.5h-8.01c-4.25,0-6.98-1.37-10.21-5.13l-9.9-11.49,9.9-11.51c3.22-3.71,5.96-5.08,10.21-5.08h8.01v8.45c0,1.71,1.03,2.69,2.73,2.69.73,0,1.56-.29,2.1-.78l14.65-12.3c1.27-1.03,1.27-2.59,0-3.76L74.81.98c-.54-.44-1.37-.73-2.1-.73-1.71,0-2.73.93-2.73,2.64v9.03h-8.35c-6.54,0-10.35,1.86-15.09,7.32l-9.38,10.93-9.12-10.59c-4.74-5.47-8.5-7.32-15.04-7.32H4.21c-2.34,0-3.96,1.42-3.96,3.56s1.61,3.52,3.96,3.52h8.94c3.86,0,6.45,1.37,9.72,5.13l9.6,11.18-9.6,11.18c-3.27,3.71-5.86,5.13-9.72,5.13H4.21c-2.34,0-3.96,1.42-3.96,3.52s1.61,3.56,3.96,3.56h8.79c6.54,0,10.3-1.86,15.04-7.32l9.12-10.6,9.39,10.94c4.74,5.47,8.54,7.32,15.09,7.32h8.35v9.03c0,1.71,1.03,2.64,2.73,2.64.73,0,1.56-.29,2.1-.78l14.65-12.3c1.27-1.17,1.27-2.73,0-3.76Z"/>
+  </svg>`;
+}
+
+// Overview 用ホーム記号（assets/homeicon.svg）— 同上
+function navHomeGlyph() {
+  return `<svg class="nav-glyph" viewBox="0 0 93.76 81.85" fill="currentColor" fill-rule="evenodd" aria-hidden="true">
+    <path d="M92.14,36.04l-10.25-8.6v-15.86c0-1.86-1.22-3.03-3.08-3.03h-4.39c-1.81,0-3.08,1.17-3.08,3.03v7.01L51.76,2.15c-1.56-1.27-3.22-1.9-4.88-1.9s-3.37.63-4.88,1.9L1.62,36.04c-.93.78-1.37,1.86-1.37,2.83,0,1.81,1.42,3.52,3.81,3.52,1.22,0,2.25-.68,3.12-1.42l4.69-3.94v35.72c0,5.57,3.37,8.84,9.03,8.84h51.9c5.71,0,9.08-3.27,9.08-8.84v-35.72l4.69,3.93c.88.73,1.9,1.42,3.12,1.42,2.39,0,3.81-1.71,3.81-3.52,0-.98-.44-2.05-1.37-2.83ZM74.81,70.95c0,2.29-1.27,3.61-3.47,3.61h-13.28v-22.12c0-1.86-1.17-3.08-3.08-3.08h-16.21c-1.86,0-3.08,1.22-3.08,3.08v22.12h-13.28c-2.2,0-3.52-1.32-3.52-3.61V31.13l26.71-22.43c.39-.34.88-.49,1.27-.49s.83.15,1.22.49l26.71,22.4v39.85Z"/>
+  </svg>`;
+}
+
 // Large folder icon (Overview grid)
 function folderIcon() {
   return `<img class="icon-png" src="${ICONS.folder}" alt="" aria-hidden="true">`;
@@ -308,16 +322,16 @@ async function ensureFolderImages(folder) {
 function renderNav() {
   const parts = [];
 
-  // Top（Random / Overview）
+  // よく使う項目（Random / Overview）
   parts.push(`
     <div class="nav-section">
-      <p class="nav-label">Top</p>
+      <p class="nav-label">よく使う項目</p>
       <ul class="nav-list">
         <li class="nav-item" data-view="random">
-          ${navFolderGlyph()}<span class="label">Random</span>
+          ${navShuffleGlyph()}<span class="label">Random</span>
         </li>
         <li class="nav-item" data-view="overview">
-          ${navFolderGlyph()}<span class="label">Overview</span>
+          ${navHomeGlyph()}<span class="label">Overview</span>
         </li>
       </ul>
     </div>`);
