@@ -242,10 +242,40 @@ function fallbackSections() {
       .map(f => ({ id: f.id, name: f.name, marker: f.marker, images: f.images || [] })),
   });
   return [
-    mk("Selected Work", "(all) Work", "all", "selected-work"),
-    mk("Experiments", "(all) Experiments", "all-exp", "experiments"),
+    mk("Selected Work", "(all)", "all", "selected-work"),
+    mk("Experiments", "(all)", "all-exp", "experiments"),
   ];
 }
+// ── Random：写真からランダムに N 枚ピックアップ ──
+//    RANDOM_EXCLUDE のセクション（old など）は対象から外す
+//    ※ 本番の除外判定は functions/api/gallery.js 側でも同じ設定が必要
+const RANDOM_COUNT = 12;
+const RANDOM_EXCLUDE = ["old"];
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+async function loadRandom(n = RANDOM_COUNT) {
+  try {
+    const r = await fetch(`/api/gallery?random=${n}`, { cache: "no-store" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j.images) && j.images.length) return j.images;
+    }
+  } catch {}
+  // フォールバック（ローカルプレビュー等）: 手元にある画像からランダムに
+  const pool = [];
+  for (const s of sections) {
+    if (RANDOM_EXCLUDE.includes(String(s.label).trim().toLowerCase())) continue;
+    for (const f of s.folders) for (const im of (f.images || [])) pool.push(im);
+  }
+  return shuffled(pool).slice(0, n);
+}
+
 function findFolder(id) {
   for (const s of sections) { const f = s.folders.find(x => x.id === id); if (f) return f; }
   return null;
@@ -278,10 +308,14 @@ async function ensureFolderImages(folder) {
 function renderNav() {
   const parts = [];
 
-  // Overview (no section label)
+  // Top（Random / Overview）
   parts.push(`
     <div class="nav-section">
+      <p class="nav-label">Top</p>
       <ul class="nav-list">
+        <li class="nav-item" data-view="random">
+          ${navFolderGlyph()}<span class="label">Random</span>
+        </li>
         <li class="nav-item" data-view="overview">
           ${navFolderGlyph()}<span class="label">Overview</span>
         </li>
@@ -496,6 +530,20 @@ async function route(view) {
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
   window.scrollTo(0, 0);   // ページ全体スクロール時も先頭へ戻す
+
+  // Random: 全写真からランダムに数枚（開くたびに引き直し）
+  if (view === "random") {
+    imageView.innerHTML = "";
+    const picks = await loadRandom();
+    if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
+    renderImages(picks);
+    playFadeIn(imageView);
+    if (!_prevViewPhotos) {
+      requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
+    }
+    _prevViewPhotos = true;
+    return;
+  }
 
   // 対象フォルダを決める（All ○○ はセクション内の全フォルダを集約）
   let folders = [];

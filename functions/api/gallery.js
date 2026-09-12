@@ -6,6 +6,8 @@
 //  2モード（初回ロードを軽くするため画像は遅延取得）:
 //    GET /api/gallery            → 構成だけ（セクション＋フォルダ名＋色ラベル）
 //    GET /api/gallery?folder=ID  → そのフォルダの中の画像だけ
+//    GET /api/gallery?random=12  → 写真からランダムに 12 枚（Random ページ用）
+//                                   ※ RANDOM_EXCLUDE のセクションは対象外
 //
 //  構成（Cloudinary 側）:
 //    ルート直下のフォルダ = セクション（例: Selected Work / Experiments / iPhone Photo）
@@ -21,6 +23,10 @@
 // ════════════════════════════════════════════════════════════
 
 const COLORS = ["red", "orange", "yellow", "green", "blue", "purple", "gray", "grey"];
+
+// Random ページの母集団から外すセクション（表示名・小文字。"01 old" のような
+// 数字プレフィックスは無視される）。ここに足すだけで除外できます。
+const RANDOM_EXCLUDE = ["old"];
 
 function pickMarker(tags, prefix) {
   for (const t of tags || []) {
@@ -46,11 +52,13 @@ export async function onRequestGet({ env, request }) {
     return r.json();
   };
   // Admin Search API（POST）— fm-* タグの付いた画像をまとめて取得して色ラベルを引くのに使用
-  const search = async (expression) => {
+  const search = async (expression, nextCursor) => {
+    const body = { expression, max_results: 500, with_field: ["tags"] };
+    if (nextCursor) body.next_cursor = nextCursor;
     const r = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/resources/search`, {
       method: "POST",
       headers: { Authorization: auth, "content-type": "application/json" },
-      body: JSON.stringify({ expression, max_results: 500, with_field: ["tags"] }),
+      body: JSON.stringify(body),
     });
     if (!r.ok) throw new Error(`search → ${r.status}`);
     return r.json();
@@ -91,6 +99,41 @@ export async function onRequestGet({ env, request }) {
     return resources.sort((a, b) =>
       a.public_id.localeCompare(b.public_id, undefined, { numeric: true })
     );
+  }
+
+  // ── モード3: ?random=N → 全フォルダの写真からランダムに N 枚返す ──
+  const randomParam = new URL(request.url).searchParams.get("random");
+  if (randomParam) {
+    const n = Math.min(60, Math.max(1, parseInt(randomParam, 10) || 12));
+    try {
+      let all = [], cursor = null, pages = 0;
+      do {
+        const sr = await search("resource_type:image", cursor);
+        all = all.concat(sr.resources || []);
+        cursor = sr.next_cursor;
+        pages++;
+      } while (cursor && pages < 4);   // 最大 2000 枚まで（十分な母集団）
+
+      // セクション/フォルダ配下の写真だけを母集団に（ルート直下の単発アップロードは除外）。
+      // さらに RANDOM_EXCLUDE のセクション（old など）は丸ごと外す。
+      const eligible = (r) => {
+        const fp = r.asset_folder || r.public_id.split("/").slice(0, -1).join("/");
+        if (!fp || !fp.includes("/")) return false;
+        const sec = displayName(fp.split("/")[0]).trim().toLowerCase();
+        return !RANDOM_EXCLUDE.includes(sec);
+      };
+      const pool = all.filter(eligible);
+
+      // Fisher–Yates でシャッフルして先頭 N 枚
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      // 毎回違う組み合わせを返したいのでキャッシュしない
+      return json({ images: pool.slice(0, n).map(buildImage) }, 200, "no-store");
+    } catch (e) {
+      return json({ error: String((e && e.message) || e) }, 500);
+    }
   }
 
   // ── モード2: ?folder=ID → そのフォルダの画像だけ返す（フォルダを開いた時）──
