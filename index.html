@@ -44,8 +44,8 @@
        不透過の帯を確定させてしまうため）。.booting は読込中の高さ予約用 -->
   <script>
     (function () {
-      var h = decodeURIComponent(location.hash.replace(/^#/, ""));
-      if (h && h !== "overview") document.body.classList.add("view-images", "booting");
+      var h = decodeURIComponent(location.hash.replace(/^#/, "")) || "random";  // トップ = Random
+      if (h !== "overview") document.body.classList.add("view-images", "booting");
     })();
   </script>
   <div class="content-wrap">

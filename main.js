@@ -249,7 +249,7 @@ function fallbackSections() {
 // ── Random：写真からランダムに N 枚ピックアップ ──
 //    RANDOM_EXCLUDE のセクション（old など）は対象から外す
 //    ※ 本番の除外判定は functions/api/gallery.js 側でも同じ設定が必要
-const RANDOM_COUNT = 12;
+const RANDOM_COUNT = 24;
 const RANDOM_EXCLUDE = ["old"];
 function shuffled(arr) {
   const a = arr.slice();
@@ -970,9 +970,10 @@ nav.addEventListener("click", e => {
 });
 
 // ── ハッシュルーティング（URL連動 + ブラウザの戻る/進む対応）──
+const HOME_VIEW = "random";   // ハッシュなしで開いた時のトップページ
 function viewFromHash() {
   const h = decodeURIComponent(location.hash.replace(/^#/, ""));
-  return h || "overview";
+  return h || HOME_VIEW;
 }
 // 画面遷移は URL（ハッシュ）を更新 → hashchange が route() を呼ぶ
 function go(view) {
@@ -983,9 +984,9 @@ function go(view) {
 }
 window.addEventListener("hashchange", () => route(viewFromHash()));
 
-// 信号機ボタン → 赤: トップ(Overview) / 緑: 全作品(All Work)
+// 信号機ボタン → 赤: Overview / 緑: Random（押すたびに引き直し）
 document.querySelector(".tl-red")?.addEventListener("click", () => go("overview"));
-document.querySelector(".tl-green")?.addEventListener("click", () => go(sections[0]?.allId || "all"));
+document.querySelector(".tl-green")?.addEventListener("click", () => go("random"));
 
 // ═══════════════════════════════════════════════════════════
 //  FOOTER CLOCK  — realtime timestamp + timezone
