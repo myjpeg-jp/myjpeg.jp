@@ -151,7 +151,7 @@ export async function onRequestGet({ env, request }) {
       sections.push({
         id: slug(secDir.name),
         label,
-        allLabel: "(all) " + label,
+        allLabel: "(all)",
         allId: "all-" + slug(secDir.name),
         folders,
       });
