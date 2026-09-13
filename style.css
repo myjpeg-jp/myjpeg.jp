@@ -672,7 +672,7 @@ html, body {
     min-height: 0;          /* can shrink to 0 when collapsed */
   }
   .sidebar.open .nav-inner {
-    max-height: 75vh;
+    max-height: 80vh;
     overflow-y: auto;       /* scroll only if the menu is very long */
   }
   /* Top gap lives on the content (clipped when closed) → no leftover
