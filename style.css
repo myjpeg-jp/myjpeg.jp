@@ -66,7 +66,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
     --ink:         rgba(255,255,255,0.85);/* labelColor (dark)                     */
     --ink-soft:    rgba(235,235,245,0.6); /* secondaryLabelColor (dark)            */
     --ink-mute:    rgba(235,235,245,0.3); /* tertiaryLabelColor (dark)             */
-    --ink-title:   rgba(255,255,255,0.65);/* タイトルバー専用（例外・独自値）        */
+    --ink-title:   rgba(255,255,255,0.85);/* labelColor (dark) — ダークは Apple 既定 */
     --accent:      #0A84FF;               /* systemBlue (dark)                     */
     --hover-bg:    rgba(255,255,255,0.08);
     --active-bg:   rgba(255,255,255,0.11);
@@ -654,11 +654,9 @@ html, body {
     display: block;
     width: 4px; height: 4px;
     border-radius: 50%;
-    background: var(--ink-title);  /* 例外: タイトルと同じ 65% */
-    transition: transform 0.2s ease, background 0.2s ease;
+    background: var(--ink-title);  /* 例外: タイトルと同じ濃さ（開閉しても変えない） */
+    transition: transform 0.2s ease;
   }
-  .menu-toggle:hover span,
-  .sidebar.open .menu-toggle span { background: var(--ink); }   /* 開いている間だけ一段濃く */
 
   /* Collapsible nav (pulldown) — grid-rows animates the real height,
      so open and close are perfectly symmetric (no jerk). */
