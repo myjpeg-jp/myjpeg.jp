@@ -562,7 +562,19 @@ async function route(view) {
   const seq = ++routeSeq;
   setActive(view);
 
-  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); _prevViewPhotos = false; return; }
+  if (view === "overview") {
+    showOverview();
+    playFadeIn(overviewView);
+    pagesScroll?.scrollTo({ top: 0 });
+    window.scrollTo(0, 0);
+    // 写真一覧（スクロール可）→ Overview（固定シェル）へ切り替わる瞬間に
+    // Safari がタブバー裏の帯を確定させるので、再判定を促す
+    if (_prevViewPhotos) {
+      requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
+    }
+    _prevViewPhotos = false;
+    return;
+  }
 
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
@@ -657,9 +669,14 @@ function unlockScroll() {
 // Safari がタブバー裏の不透過の帯を確定させると、写真一覧へ遷移しても再評価されない。
 // 実測で「プレビュー開閉をすると帯が消える」ことが分かっているため、その状態
 // （全画面の固定オーバーレイ + body スクロールロック）を不可視で短時間再現する。
+//  写真一覧だけでなく Overview に入る時にも使う。Overview は固定シェル＝
+//  スクロール不可なので、写真一覧から一瞬で切り替わると Safari がその場で
+//  帯を確定させてしまう（メニュー経由だとプルダウンの開閉でページ高さが
+//  変わるため再判定が入り、帯が出ない）。
+//  なお lockScroll() 側は写真一覧の時だけ効くので、Overview では
+//  透明オーバーレイによる再判定だけが走る。
 function refreshBarTransparency() {
   if (window.innerWidth > MOBILE_BP) return;
-  if (!document.body.classList.contains("view-images")) return;
   if (scrollLocked) return;                  // 実際のプレビュー表示中は不要
   const ov = document.createElement("div");
   ov.style.cssText =
