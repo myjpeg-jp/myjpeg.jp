@@ -124,9 +124,9 @@ html, body {
 .traffic-lights { display: flex; gap: 8px; flex-shrink: 0; }
 .tl { width: 14px; height: 14px; border-radius: 50%; }
 .tl-red    { background: #FF5F56; cursor: pointer; }
+.tl-yellow { background: #FFBD2E; cursor: pointer; }
 .tl-green  { background: #27C93F; cursor: pointer; }
-.tl-red:hover, .tl-green:hover { filter: brightness(0.92); }
-.tl-yellow { background: #FFBD2E; }
+.tl-red:hover, .tl-yellow:hover, .tl-green:hover { filter: brightness(0.92); }
 
 .site-title {
   font-size: 1.0625rem;         /* HIG Headline · 17pt */
@@ -135,6 +135,7 @@ html, body {
   letter-spacing: -0.012em;     /* -0.2pt — HIG 既定(-0.43pt)より少し開ける */
   color: var(--ink-title);      /* 例外: システム階層ではなく独自の 65% */
   white-space: nowrap;          /* no clipping — short fixed brand name */
+  cursor: pointer;              /* クリックでトップ（リンクの見た目にはしない） */
 }
 
 /* Mobile menu button — hidden on desktop */

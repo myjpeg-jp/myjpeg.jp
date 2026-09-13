@@ -861,6 +861,13 @@ function commitCols(c) {
   lsSet("img-cols", c);
   updateToggle(c);
 }
+// カラム数を指定して一気に反映（信号機の黄/緑ボタン用）。スライダーのつまみも追従させる
+function setCols(c) {
+  const mc = maxCols();
+  c = Math.min(Math.max(c, 1), mc);
+  commitCols(c);
+  gsRange.value = mc + 1 - c;   // 左端 = 最大カラム
+}
 gridToggle?.addEventListener("click", () => {
   const mc = maxCols();
   commitCols(Math.min(Math.max(currentCols() + toggleDir, 1), mc));
@@ -949,9 +956,16 @@ function go(view) {
 }
 window.addEventListener("hashchange", () => route(viewFromHash()));
 
-// 信号機ボタン → 赤: Overview / 緑: Random（押すたびに引き直し）
+// タイトル（my.jpeg）→ トップ（Random。押すたびに引き直し）
+document.querySelector(".site-title")?.addEventListener("click", () => go(HOME_VIEW));
+
+// 信号機ボタン
+//   赤 … Overview
+//   黄 … サムネイル最小（＝カラム最大。PC 6 / スマホ 3）
+//   緑 … サムネイル最大（＝1カラム）
 document.querySelector(".tl-red")?.addEventListener("click", () => go("overview"));
-document.querySelector(".tl-green")?.addEventListener("click", () => go("random"));
+document.querySelector(".tl-yellow")?.addEventListener("click", () => setCols(maxCols()));
+document.querySelector(".tl-green")?.addEventListener("click", () => setCols(1));
 
 // ═══════════════════════════════════════════════════════════
 //  FOOTER CLOCK  — realtime timestamp + timezone
