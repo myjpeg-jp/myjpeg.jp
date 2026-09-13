@@ -42,6 +42,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --ink:         rgba(0,0,0,0.85);      /* labelColor                    */
   --ink-soft:    rgba(0,0,0,0.5);       /* secondaryLabelColor           */
   --ink-mute:    rgba(0,0,0,0.25);      /* tertiaryLabelColor            */
+  --ink-title:   rgba(0,0,0,0.65);      /* タイトルバー専用（例外・独自値） */
   --accent:      #007AFF;               /* systemBlue                    */
   --hover-bg:    rgba(0,0,0,0.05);
   --active-bg:   rgba(0,0,0,0.07);
@@ -65,6 +66,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
     --ink:         rgba(255,255,255,0.85);/* labelColor (dark)                     */
     --ink-soft:    rgba(235,235,245,0.6); /* secondaryLabelColor (dark)            */
     --ink-mute:    rgba(235,235,245,0.3); /* tertiaryLabelColor (dark)             */
+    --ink-title:   rgba(255,255,255,0.65);/* タイトルバー専用（例外・独自値）        */
     --accent:      #0A84FF;               /* systemBlue (dark)                     */
     --hover-bg:    rgba(255,255,255,0.08);
     --active-bg:   rgba(255,255,255,0.11);
@@ -131,7 +133,7 @@ html, body {
   font-weight: 600;             /* Semibold */
   line-height: 1.4;             /* room for j/p/g descenders */
   letter-spacing: -0.012em;     /* -0.2pt — HIG 既定(-0.43pt)より少し開ける */
-  color: var(--ink-soft);       /* secondaryLabel — 非アクティブウインドウのタイトル相当 */
+  color: var(--ink-title);      /* 例外: システム階層ではなく独自の 65% */
   white-space: nowrap;          /* no clipping — short fixed brand name */
 }
 
@@ -652,11 +654,11 @@ html, body {
     display: block;
     width: 4px; height: 4px;
     border-radius: 50%;
-    background: var(--ink-mute);   /* tertiaryLabel — 平常時は控えめに */
+    background: var(--ink-title);  /* 例外: タイトルと同じ 65% */
     transition: transform 0.2s ease, background 0.2s ease;
   }
   .menu-toggle:hover span,
-  .sidebar.open .menu-toggle span { background: var(--ink-soft); }   /* 開いている間だけ一段濃く */
+  .sidebar.open .menu-toggle span { background: var(--ink); }   /* 開いている間だけ一段濃く */
 
   /* Collapsible nav (pulldown) — grid-rows animates the real height,
      so open and close are perfectly symmetric (no jerk). */
