@@ -35,7 +35,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --bg:          #F2F2F7;               /* systemGroupedBackground       */
   --main-bg:     #FFFFFF;               /* systemBackground              */
   --sidebar-bg:  rgba(255,255,255,0.72);/* frosted sidebar material      */
-  --card-border: #C6C6C8;               /* opaqueSeparator               */
+  /* --card-border: #C6C6C8; */               /* opaqueSeparator               */
   --ink:         rgba(0,0,0,0.85);      /* labelColor                    */
   --ink-soft:    rgba(0,0,0,0.5);       /* secondaryLabelColor           */
   --ink-mute:    rgba(0,0,0,0.25);      /* tertiaryLabelColor            */
@@ -53,7 +53,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
     --bg:          #000000;               /* systemGroupedBackground (dark)        */
     --main-bg:     #1C1C1E;               /* secondarySystemGroupedBackground      */
     --sidebar-bg:  rgba(44,44,46,0.72);   /* tertiarySystemBackground, frosted     */
-    --card-border: #38383A;               /* opaqueSeparator (dark)                */
+    /* --card-border: #38383A; */               /* opaqueSeparator (dark)                */
     --ink:         rgba(255,255,255,0.85);/* labelColor (dark)                     */
     --ink-soft:    rgba(235,235,245,0.6); /* secondaryLabelColor (dark)            */
     --ink-mute:    rgba(235,235,245,0.3); /* tertiaryLabelColor (dark)             */
