@@ -38,7 +38,7 @@ function pickMarker(tags, prefix) {
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const displayName = (s) => s.replace(/^\d+[\s._-]+/, "");   // 先頭の "01 " 等を除去
 
-export async function onRequestGet({ env, request }) {
+export async function onRequestGet({ env, request, waitUntil }) {
   const cloud = env.CLD_CLOUD;
   if (!cloud || !env.CLD_KEY || !env.CLD_SECRET) {
     return json({ error: "Missing CLD_CLOUD / CLD_KEY / CLD_SECRET env vars" }, 500);
@@ -63,6 +63,40 @@ export async function onRequestGet({ env, request }) {
     if (!r.ok) throw new Error(`search → ${r.status}`);
     return r.json();
   };
+
+  // ── エッジキャッシュ（今回の不具合の本丸）────────────────
+  //  Pages Function のレスポンスは cache-control を付けても CDN には載らず、
+  //  効くのはブラウザのキャッシュだけ。そのままだと訪問者が変わるたびに
+  //  Cloudinary の Admin API を叩き、1時間あたりの上限（HTTP 420）に達する。
+  //  → 取得結果を Cache API に明示的に置き、TTL の間は Cloudinary を呼ばない。
+  const edgeCache = async (key, ttl, produce) => {
+    const cacheKey = new Request(`https://gallery.internal/${key}`);
+    let store;
+    try { store = caches.default; } catch { store = null; }
+
+    if (store) {
+      const hit = await store.match(cacheKey).catch(() => null);
+      if (hit) {
+        const v = await hit.json().catch(() => null);
+        if (v) return v;
+      }
+    }
+    const value = await produce();
+    // 空っぽ / 欠けている結果はキャッシュしない（一時的な失敗の固定化を防ぐ）
+    const empty = Array.isArray(value) && !value.length;
+    if (store && value && !empty && !value.__nocache) {
+      const res = new Response(JSON.stringify(value), {
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": `public, max-age=${ttl}`,
+        },
+      });
+      const put = store.put(cacheKey, res.clone()).catch(() => {});
+      if (typeof waitUntil === "function") waitUntil(put); else await put;
+    }
+    return value;
+  };
+  const TTL = 900;   // 15分（Cloudinary を叩く間隔）
 
   const buildImage = (r) => ({
     url: `https://res.cloudinary.com/${cloud}/image/upload/f_auto,q_auto/v${r.version}/${r.public_id}.${r.format}`,
@@ -101,36 +135,40 @@ export async function onRequestGet({ env, request }) {
     );
   }
 
-  // ── モード3: ?random=N → 全フォルダの写真からランダムに N 枚返す ──
+  // ── モード3: ?random=N → 写真からランダムに N 枚返す ──
+  //  母集団（画像一覧）はエッジにキャッシュし、抽選だけを毎回行う。
+  //  → Cloudinary を叩くのは TTL ごとに1回、レスポンスは毎回違う組み合わせ。
   const randomParam = new URL(request.url).searchParams.get("random");
   if (randomParam) {
     const n = Math.min(60, Math.max(1, parseInt(randomParam, 10) || 12));
     try {
-      let all = [], cursor = null, pages = 0;
-      do {
-        const sr = await search("resource_type:image", cursor);
-        all = all.concat(sr.resources || []);
-        cursor = sr.next_cursor;
-        pages++;
-      } while (cursor && pages < 4);   // 最大 2000 枚まで（十分な母集団）
+      const pool = await edgeCache("random-pool", TTL, async () => {
+        let all = [], cursor = null, pages = 0;
+        do {
+          const sr = await search("resource_type:image", cursor);
+          all = all.concat(sr.resources || []);
+          cursor = sr.next_cursor;
+          pages++;
+        } while (cursor && pages < 2);   // 最大 1000 枚
 
-      // セクション/フォルダ配下の写真だけを母集団に（ルート直下の単発アップロードは除外）。
-      // さらに RANDOM_EXCLUDE のセクション（old など）は丸ごと外す。
-      const eligible = (r) => {
-        const fp = r.asset_folder || r.public_id.split("/").slice(0, -1).join("/");
-        if (!fp || !fp.includes("/")) return false;
-        const sec = displayName(fp.split("/")[0]).trim().toLowerCase();
-        return !RANDOM_EXCLUDE.includes(sec);
-      };
-      const pool = all.filter(eligible);
+        // セクション/フォルダ配下の写真だけを母集団に（ルート直下の単発アップロードは除外）。
+        // さらに RANDOM_EXCLUDE のセクション（old など）は丸ごと外す。
+        const eligible = (r) => {
+          const fp = r.asset_folder || r.public_id.split("/").slice(0, -1).join("/");
+          if (!fp || !fp.includes("/")) return false;
+          const sec = displayName(fp.split("/")[0]).trim().toLowerCase();
+          return !RANDOM_EXCLUDE.includes(sec);
+        };
+        return all.filter(eligible).map(buildImage);
+      });
 
       // Fisher–Yates でシャッフルして先頭 N 枚
       for (let i = pool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pool[i], pool[j]] = [pool[j], pool[i]];
       }
-      // 毎回違う組み合わせを返したいのでキャッシュしない
-      return json({ images: pool.slice(0, n).map(buildImage) }, 200, "no-store");
+      // 抽選結果そのものはキャッシュしない（毎回違う組み合わせを返す）
+      return json({ images: pool.slice(0, n) }, 200, "no-store");
     } catch (e) {
       return json({ error: String((e && e.message) || e) }, 500);
     }
@@ -140,8 +178,11 @@ export async function onRequestGet({ env, request }) {
   const folderId = new URL(request.url).searchParams.get("folder");
   if (folderId) {
     try {
-      const resources = await listImages(folderId);
-      return json({ images: resources.map(buildImage) }, 200, "public, max-age=60");
+      const images = await edgeCache(`folder/${encodeURIComponent(folderId)}`, TTL, async () => {
+        const resources = await listImages(folderId);
+        return resources.map(buildImage);
+      });
+      return json({ images }, 200, "public, max-age=300");
     } catch (e) {
       return json({ error: String((e && e.message) || e) }, 500);
     }
@@ -149,15 +190,11 @@ export async function onRequestGet({ env, request }) {
 
   // ── モード1: 構成だけ返す（セクション＋フォルダ名＋色ラベル）──
   try {
+    const built = await edgeCache("sections", TTL, async () => {
     // ルート直下のフォルダ = セクション（最重要）。
     // ここが一時的に失敗した時に「空の構成」を返すと、それがキャッシュされて
-    // フォルダが消えたまま固定化してしまう → 失敗時はエラー扱いにしてキャッシュさせない。
-    let root;
-    try {
-      root = await get("folders");
-    } catch (e) {
-      return json({ error: "folders: " + String((e && e.message) || e) }, 502); // no-store
-    }
+    // フォルダが消えたまま固定化してしまう → 失敗時は throw してキャッシュさせない。
+    const root = await get("folders");
     const sectionDirs = (root.folders || []).sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { numeric: true })
     );
@@ -201,10 +238,13 @@ export async function onRequestGet({ env, request }) {
     }
 
     // 中身が揃っている時だけキャッシュ（一時的な取得失敗を固定化させない）
-    const cache = (!degraded && sections.length) ? "public, max-age=60" : "no-store";
-    return json({ sections }, 200, cache);
+    return { sections, __nocache: degraded || !sections.length };
+    });
+    return json({ sections: built.sections }, 200,
+      built.__nocache ? "no-store" : "public, max-age=300");
   } catch (e) {
-    return json({ error: String((e && e.message) || e) }, 500);
+    // 502/504 は Cloudflare が自前のエラーページに差し替えてしまうので 503 を使う
+    return json({ error: String((e && e.message) || e) }, 503, "no-store");
   }
 }
 

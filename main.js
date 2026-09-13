@@ -238,15 +238,32 @@ function esc(s) {
 //  失敗時（ローカルプレビュー等）は data.folders にフォールバック
 // ═══════════════════════════════════════════════════════════
 let sections = [];
+let galleryError = false;   // API から取得できなかった（本番で「読み込めません」を出すため）
+
+// ローカルプレビュー（file:// や localhost）でだけデモ画像にフォールバックする。
+// 本番でデモ写真が出てしまうと、本物の写真が消えたように見えるため。
+const isLocalPreview =
+  location.protocol === "file:" ||
+  /^(localhost|127\.|\[::1\]|0\.0\.0\.0)/.test(location.hostname);
+
+async function fetchSections() {
+  const r = await fetch("/api/gallery", { cache: "no-cache" });
+  if (!r.ok) throw new Error(String(r.status));
+  const j = await r.json();
+  if (!Array.isArray(j.sections) || !j.sections.length) throw new Error("empty");
+  return j.sections;
+}
 async function loadGallery() {
   try {
-    const r = await fetch("/api/gallery", { cache: "no-cache" });
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j.sections)) return j.sections;
-    }
+    return await fetchSections();
   } catch {}
-  return fallbackSections();
+  // 一時的な失敗（レート制限・ネットワークの瞬断）を拾うため、少し待って1回だけ再試行
+  await new Promise(r => setTimeout(r, 800));
+  try {
+    return await fetchSections();
+  } catch {}
+  galleryError = true;
+  return isLocalPreview ? fallbackSections() : [];
 }
 function fallbackSections() {
   const mk = (label, allLabel, allId, section) => ({
@@ -281,11 +298,15 @@ async function loadRandom(n = RANDOM_COUNT) {
       if (Array.isArray(j.images) && j.images.length) return j.images;
     }
   } catch {}
-  // フォールバック（ローカルプレビュー等）: 手元にある画像からランダムに
-  const pool = [];
+  // フォールバック: 対象フォルダをいくつか開いて、その中からランダムに
+  const folders = [];
   for (const s of sections) {
     if (RANDOM_EXCLUDE.includes(String(s.label).trim().toLowerCase())) continue;
-    for (const f of s.folders) for (const im of (f.images || [])) pool.push(im);
+    for (const f of s.folders) folders.push(f);
+  }
+  const pool = [];
+  for (const f of shuffled(folders).slice(0, 4)) {
+    for (const im of await ensureFolderImages(f)) pool.push(im);
   }
   return shuffled(pool).slice(0, n);
 }
@@ -473,8 +494,10 @@ function renderImages(images) {
   lbImages = images;
   document.body.classList.remove("booting");  // 読込中の高さ予約を解除（iOS 帯対策）
   imageView.style.minHeight = "";   // 前ビューの高さ予約が残らないようにクリア
-  if (!images.length) {            // 空フォルダ
-    imageView.innerHTML = `<p class="empty-note">No images</p>`;
+  if (!images.length) {            // 空フォルダ / 読み込み失敗
+    imageView.innerHTML = galleryError
+      ? `<p class="empty-note">写真を読み込めませんでした。<br>少し時間をおいて再読み込みしてください。</p>`
+      : `<p class="empty-note">No images</p>`;
     return;
   }
   const tw = thumbW();
