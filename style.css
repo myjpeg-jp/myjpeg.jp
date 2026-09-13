@@ -406,10 +406,14 @@ html, body {
   margin-bottom: 2px;
 }
 
-/* Selected caption look (Finder blue highlight) */
+/* Selected caption look — Finder の選択ラベルと同じ「青ベタ + 白文字」
+   （accent は systemBlue。ライト #007AFF / ダーク #0A84FF） */
 .folder-cell:hover .cell-caption,
-.file-cell:hover .cell-caption {
-  background: var(--active-bg);
+.file-cell:hover .cell-caption,
+.folder-cell:active .cell-caption,
+.file-cell:active .cell-caption {
+  background: var(--accent);
+  color: #fff;
 }
 
 /* ════════════ Lightbox ════════════ */
