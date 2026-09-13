@@ -199,6 +199,23 @@ const sidebar      = document.querySelector(".sidebar");
 const menuToggle   = document.getElementById("menu-toggle");
 const pagesScroll  = document.querySelector(".pages-scroll");
 
+// 可視領域の高さ（iOS Safari のツールバーを除いた実寸）を CSS 変数に反映。
+// visualViewport の scroll はスクロール中ずっと発火するため、値が実際に
+// 変わった時だけ書き込む（毎回書くとスクロール中に無駄なスタイル再計算が走る）
+let _vvhLast = 0;
+function setVVH() {
+  const h = Math.round((window.visualViewport && window.visualViewport.height) || window.innerHeight);
+  if (h === _vvhLast) return;
+  _vvhLast = h;
+  document.documentElement.style.setProperty("--vvh", h + "px");
+}
+setVVH();
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", setVVH);
+  window.visualViewport.addEventListener("scroll", setVVH);
+}
+window.addEventListener("orientationchange", () => setTimeout(setVVH, 300));
+window.addEventListener("load", setVVH);
 
 // OS の「視差効果を減らす」設定（true ならアニメーションを抑える）
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -475,6 +492,7 @@ function thumbW() {
 
 function renderImages(images) {
   lbImages = images;
+  document.body.classList.remove("booting");  // 読込中の高さ予約を解除（iOS 帯対策）
   imageView.style.minHeight = "";   // 前ビューの高さ予約が残らないようにクリア
   if (!images.length) {            // 空フォルダ / 読み込み失敗
     imageView.innerHTML = galleryError
@@ -529,7 +547,7 @@ function showOverview() {
   overviewView.classList.remove("hidden");
   imageView.classList.add("hidden");
   gridSlider.classList.add("hidden");        // slider only for thumbnails
-  document.body.classList.remove("view-images");
+  document.body.classList.remove("view-images", "booting");
 }
 function showImages() {
   overviewView.classList.add("hidden");
@@ -539,11 +557,12 @@ function showImages() {
 }
 
 let routeSeq = 0;
+let _prevViewPhotos = false;   // 直前のビューが写真一覧だったか（帯の再判定の要否に使う）
 async function route(view) {
   const seq = ++routeSeq;
   setActive(view);
 
-  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); return; }
+  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); _prevViewPhotos = false; return; }
 
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
@@ -556,6 +575,10 @@ async function route(view) {
     if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
     renderImages(picks);
     playFadeIn(imageView);
+    if (!_prevViewPhotos) {
+      requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
+    }
+    _prevViewPhotos = true;
     return;
   }
 
@@ -576,6 +599,13 @@ async function route(view) {
   if (seq !== routeSeq) return;   // 競合: 取得中に別の遷移が始まっていたら破棄
   renderImages(arrays.flat());
   playFadeIn(imageView);
+  // Overview（スクロール不可のシェル）から来た時だけ、帯の再判定が必要。
+  // 写真一覧→写真一覧はドキュメントがスクロール可能なままなので帯は形成されず、
+  // 再判定（450ms のスクロールロック）を毎回行うのは無駄になる。
+  if (!_prevViewPhotos) {
+    requestAnimationFrame(() => requestAnimationFrame(refreshBarTransparency));
+  }
+  _prevViewPhotos = true;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -602,12 +632,54 @@ function preloadAdjacent() {
   }
 }
 let lbReturnFocus = null;                 // 閉じた後にフォーカスを戻す先
+// ライトボックス表示中、背景ページがスクロールしないように固定（スマホの写真一覧＝ページ全体スクロール時のみ）
+let lockedScrollY = 0, scrollLocked = false;
+function lockScroll() {
+  if (scrollLocked) return;
+  if (!(window.innerWidth <= MOBILE_BP && document.body.classList.contains("view-images"))) return;
+  lockedScrollY = window.scrollY;
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${lockedScrollY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  scrollLocked = true;
+}
+function unlockScroll() {
+  if (!scrollLocked) return;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  window.scrollTo(0, lockedScrollY);
+  scrollLocked = false;
+}
+// iOS 26 の帯対策（ページ内遷移用）：Overview（固定シェル＝スクロール不可）の間に
+// Safari がタブバー裏の不透過の帯を確定させると、写真一覧へ遷移しても再評価されない。
+// 実測で「プレビュー開閉をすると帯が消える」ことが分かっているため、その状態
+// （全画面の固定オーバーレイ + body スクロールロック）を不可視で短時間再現する。
+function refreshBarTransparency() {
+  if (window.innerWidth > MOBILE_BP) return;
+  if (!document.body.classList.contains("view-images")) return;
+  if (scrollLocked) return;                  // 実際のプレビュー表示中は不要
+  const ov = document.createElement("div");
+  ov.style.cssText =
+    "position:fixed;inset:0;pointer-events:none;z-index:2000;" +
+    "background:rgba(0,0,0,0.001);" +
+    "-webkit-backdrop-filter:blur(0.5px);backdrop-filter:blur(0.5px);";
+  document.body.appendChild(ov);
+  lockScroll();
+  setTimeout(() => {
+    // この間にユーザーが実際にプレビューを開いていたら、解除は closeLightbox に任せる
+    if (!lightbox.classList.contains("open")) unlockScroll();
+    ov.remove();
+  }, 450);
+}
 
 // プレビュー中の背景スクロール防止。
-// 注意: body を position:fixed にする方式はドキュメントを一時的に「スクロール不可」
-// へ変えるため、iOS 26 がその瞬間にタブバー裏の不透過帯を確定させてしまう。
-// そこで body には触れず、プレビュー上の1本指ドラッグだけを止めて背景スクロールを
-// 防ぐ（2本指は残す＝画像のピンチズームは可能なまま）。
+// 注意: lockScroll（body を position:fixed にする方式）はドキュメントを一時的に
+// 「スクロール不可」へ変えるため、iOS 26 がその瞬間にタブバー裏の不透過帯を
+// 確定させてしまう。そこで body には触れず、プレビュー上の1本指ドラッグだけを
+// 止めて背景スクロールを防ぐ（2本指は残す＝画像のピンチズームは可能なまま）。
 lightbox.addEventListener("touchmove", e => {
   if (e.touches.length === 1) e.preventDefault();
 }, { passive: false });

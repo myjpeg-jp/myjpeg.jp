@@ -710,6 +710,12 @@ html, body {
     min-height: calc(100lvh + 24px);
     overflow: visible;
   }
+  /* iOS 26 の帯対策：直リンクで開いた時、サムネイル読込前でもページを画面より
+     高くしておく。読み込みの瞬間に「高さ＝画面ぴったり・スクロール不可」だと、
+     Safari がその時点でタブバー裏に不透過の帯を確定させてしまうため。
+     .booting は index.html のインラインスクリプトが初回描画前に付け、
+     サムネイル描画後（renderImages）に外れる */
+  body.booting .pages-scroll { min-height: 150vh; }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
   .copyright { font-size: 0.74rem; }
