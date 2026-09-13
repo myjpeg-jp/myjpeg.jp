@@ -128,10 +128,10 @@ html, body {
 
 .site-title {
   font-size: 1.0625rem;         /* HIG Headline · 17pt */
-  font-weight: 600;             /* Semibold */
+  font-weight: 500;             /* Medium — Semibold より一段軽く */
   line-height: 1.4;             /* room for j/p/g descenders */
   letter-spacing: -0.024em;     /* -0.43pt */
-  color: var(--ink);
+  color: var(--ink-soft);       /* secondaryLabel — 非アクティブウインドウのタイトル相当 */
   white-space: nowrap;          /* no clipping — short fixed brand name */
 }
 
@@ -652,11 +652,11 @@ html, body {
     display: block;
     width: 4px; height: 4px;
     border-radius: 50%;
-    background: var(--ink-soft);
+    background: var(--ink-mute);   /* tertiaryLabel — 平常時は控えめに */
     transition: transform 0.2s ease, background 0.2s ease;
   }
   .menu-toggle:hover span,
-  .sidebar.open .menu-toggle span { background: var(--ink); }
+  .sidebar.open .menu-toggle span { background: var(--ink-soft); }   /* 開いている間だけ一段濃く */
 
   /* Collapsible nav (pulldown) — grid-rows animates the real height,
      so open and close are perfectly symmetric (no jerk). */
