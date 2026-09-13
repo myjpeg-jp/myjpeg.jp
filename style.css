@@ -23,6 +23,9 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --card-radius:   20px;
   --radius-item:   11px;
   --thumb-radius:  12px;   /* サムネの角丸（FLIP の逆補正の基準にも使う） */
+  /* 区切り線の太さ。1px CSS は Retina だと実ピクセル2本＝Apple のヘアラインの
+     倍の太さになるので、2x 以上では 0.5px（＝実ピクセル1本）に落とす */
+  --hairline: 1px;
   /* motion — Apple-like easing (iOS/macOS の余韻のあるイーズ) */
   --ease:    cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -35,7 +38,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --bg:          #F2F2F7;               /* systemGroupedBackground       */
   --main-bg:     #FFFFFF;               /* systemBackground              */
   --sidebar-bg:  rgba(255,255,255,0.72);/* frosted sidebar material      */
-  /* --card-border: #C6C6C8; */               /* opaqueSeparator               */
+  --card-border: rgba(60,60,67,0.29);   /* separator                     */
   --ink:         rgba(0,0,0,0.85);      /* labelColor                    */
   --ink-soft:    rgba(0,0,0,0.5);       /* secondaryLabelColor           */
   --ink-mute:    rgba(0,0,0,0.25);      /* tertiaryLabelColor            */
@@ -47,13 +50,18 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --img-shadow:  rgba(0,0,0,0.22);
 }
 
+/* Retina（2x 以上）では実ピクセル1本のヘアラインに */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  :root { --hairline: 0.5px; }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     /* DARK — Apple system colors */
     --bg:          #000000;               /* systemGroupedBackground (dark)        */
     --main-bg:     #1C1C1E;               /* secondarySystemGroupedBackground      */
     --sidebar-bg:  rgba(44,44,46,0.72);   /* tertiarySystemBackground, frosted     */
-    /* --card-border: #38383A; */               /* opaqueSeparator (dark)                */
+    --card-border: rgba(255,255,255,0.10);/* separator (dark, macOS 相当)          */
     --ink:         rgba(255,255,255,0.85);/* labelColor (dark)                     */
     --ink-soft:    rgba(235,235,245,0.6); /* secondaryLabelColor (dark)            */
     --ink-mute:    rgba(235,235,245,0.3); /* tertiaryLabelColor (dark)             */
@@ -96,7 +104,7 @@ html, body {
   z-index: 20;
   /* floating translucent card */
   background: var(--sidebar-bg);
-  border: 1px solid var(--card-border);
+  border: var(--hairline) solid var(--card-border);
   border-radius: var(--card-radius);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -209,7 +217,7 @@ html, body {
   flex-direction: column;
   overflow: hidden;                 /* clip footer to rounded corners */
   background: var(--main-bg);
-  border: 1px solid var(--card-border);
+  border: var(--hairline) solid var(--card-border);
   border-radius: var(--card-radius);
   min-width: 0;
 }
@@ -231,7 +239,7 @@ html, body {
   justify-content: center;
   height: 38px;
   padding: 0 18px;
-  border-top: 1px solid var(--card-border);
+  border-top: var(--hairline) solid var(--card-border);
 }
 
 .copyright {
@@ -264,7 +272,7 @@ html, body {
 .ov-divider {
   width: 100%;
   border: none;
-  border-top: 1px solid var(--card-border);
+  border-top: var(--hairline) solid var(--card-border);
   margin: 28px 0;
 }
 
@@ -502,7 +510,7 @@ html, body {
   display: flex;
   flex-direction: column;
   background: var(--main-bg);
-  border: 1px solid var(--card-border);
+  border: var(--hairline) solid var(--card-border);
   border-radius: 18px;
   box-shadow: 0 24px 70px rgba(0,0,0,0.28);
   overflow: hidden;
