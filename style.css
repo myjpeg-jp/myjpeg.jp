@@ -128,9 +128,9 @@ html, body {
 
 .site-title {
   font-size: 1.0625rem;         /* HIG Headline · 17pt */
-  font-weight: 500;             /* Medium — Semibold より一段軽く */
+  font-weight: 600;             /* Semibold */
   line-height: 1.4;             /* room for j/p/g descenders */
-  letter-spacing: -0.024em;     /* -0.43pt */
+  letter-spacing: -0.012em;     /* -0.2pt — HIG 既定(-0.43pt)より少し開ける */
   color: var(--ink-soft);       /* secondaryLabel — 非アクティブウインドウのタイトル相当 */
   white-space: nowrap;          /* no clipping — short fixed brand name */
 }
