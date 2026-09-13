@@ -685,53 +685,37 @@ html, body {
     margin-top: 10px;
     margin-bottom: 4px;
     border-radius: 28px;
-    flex: 1;              /* fill remaining screen height */
-    min-height: 0;
+    flex: 1 0 auto;        /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
+    overflow: visible;
   }
-  .pages-scroll { padding: 20px 20px 20px; }
+  .pages-scroll {
+    padding: 20px 20px 20px;
+    overflow: visible;     /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
+  }
 
-  /* iOS Safari: position:fixed 要素は「下部バーの上（可視領域）」に収まる。
-     content-wrap を fixed・inset:0・高さ指定なし にすると、ツールバー表示時も
-     可視領域いっぱいに収まり、フッターまで含めてバーの裏に隠れない。
-     （高さを 100%/100vh 等で固定すると追従が上書きされ裏に隠れてしまう） */
+  /* スマホは Overview / 写真一覧とも「ページ全体スクロール」で統一する。
+     以前は Overview だけ position:fixed の固定シェル（可視領域ぴったり）に
+     していたが、それだとそのページはスクロール不可になり、iOS 26 が
+     タブバーの裏に不透過のグレー帯を敷いてしまう（赤ボタンで Overview に
+     入った時に出ていたのがこれ）。
+     svh だと「ページが可視領域に収まる」と判定されて同じことが起きるため、
+     lvh（バー最小時の大きい方のビューポート）で常にバーの裏まで届く高さを
+     確保しておく。これで帯は出ず、スクロールでツールバーも引っ込む。 */
   .content-wrap {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    /* JSが実測した可視領域の高さ（ツールバー除外）に合わせる。ただし svh
-       （＝ツールバーが出ている時の最小ビューポート）を超えさせない。実測値が
-       古い（バーが縮んでいた時の大きい値）ままだと、カードがタブバーの裏まで
-       伸びて不透過の帯として見えるため、上限で頭打ちにしておく。 */
-    height: min(var(--vvh, 100svh), 100svh);
-    min-height: 0;              /* base の min-height:100vh を打ち消す */
     flex-direction: column;
-    overflow: hidden;
-  }
-
-  /* 写真一覧の時だけ「ページ全体スクロール」に切り替え → Safari のツールバーが引っ込む。
-     （Overview は上の固定アプリシェルのまま。フッターはページ最下部へ移動する） */
-  body.view-images .content-wrap {
-    position: static;
-    height: auto;
     min-height: 100vh;
-    /* svh だと「ページが可視領域に収まる」と Safari が判定し、タブバー背後に
-       ページ背景色のグレー帯を敷くことがある。lvh（バー最小時の大きい方の
-       ビューポート）にして、常にバーの裏まで届く高さを確保する（iOS 26 対策） */
-    min-height: 100lvh;
+    /* +24px の余白は「常に少しだけスクロールできる」状態を保つため。
+       ちょうど 100lvh だと、ツールバーが縮んだ状態で高さが画面とぴったり一致し、
+       スクロール不可 → また帯が出る、という条件に戻ってしまう。 */
+    min-height: calc(100lvh + 24px);
     overflow: visible;
   }
-  body.view-images .pages {
-    flex: 1 0 auto;     /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
-    overflow: visible;
-  }
-  body.view-images .pages-scroll {
-    overflow: visible;  /* 内部スクロールを止め、ドキュメント自体をスクロールさせる */
-  }
-  /* iOS 26 の帯対策：直リンクで写真一覧を開いた時、サムネイル読込前でも
-     ページを画面より高くしておく。読み込みの瞬間に「高さ＝画面ぴったり・
-     スクロール不可」だと、Safari がその時点でタブバー裏に不透過の帯を
-     確定させてしまうため。.booting は index.html のインラインスクリプトが
-     初回描画前に付け、サムネイル描画後（renderImages）に外れる */
-  body.view-images.booting .pages-scroll { min-height: 150vh; }
+  /* iOS 26 の帯対策：直リンクで開いた時、サムネイル読込前でもページを画面より
+     高くしておく。読み込みの瞬間に「高さ＝画面ぴったり・スクロール不可」だと、
+     Safari がその時点でタブバー裏に不透過の帯を確定させてしまうため。
+     .booting は index.html のインラインスクリプトが初回描画前に付け、
+     サムネイル描画後（renderImages）に外れる */
+  body.booting .pages-scroll { min-height: 150vh; }
   /* nav rows inherit the iOS Body · 17pt size from base */
   .grid-slider { display: none; }   /* スマホはフッターのスライダーを使わず、下のステッパーに置換 */
   .copyright { font-size: 0.74rem; }
