@@ -204,10 +204,18 @@ const pagesScroll  = document.querySelector(".pages-scroll");
 // 変わった時だけ書き込む（毎回書くとスクロール中に無駄なスタイル再計算が走る）
 let _vvhLast = 0;
 function setVVH() {
-  const h = Math.round((window.visualViewport && window.visualViewport.height) || window.innerHeight);
+  // 切り上げ側に振れると固定シェルが可視領域より高くなり、カードがタブバーの
+  // 裏に潜り込む（＝不透過の帯に見える）。必ず切り捨てる。
+  const h = Math.floor((window.visualViewport && window.visualViewport.height) || window.innerHeight);
   if (h === _vvhLast) return;
   _vvhLast = h;
   document.documentElement.style.setProperty("--vvh", h + "px");
+}
+// iOS Safari は下部バーの出し入れをアニメーションするので、遷移した直後に1回
+// 測るだけだと「バーが縮んでいた時の大きい高さ」を掴んだまま固定されてしまう。
+// Overview（固定シェル）へ移る時は、バーが戻りきるまで測り直す。
+function remeasureVVH() {
+  for (const t of [0, 60, 150, 300, 500, 800]) setTimeout(setVVH, t);
 }
 setVVH();
 if (window.visualViewport) {
@@ -562,7 +570,15 @@ async function route(view) {
   const seq = ++routeSeq;
   setActive(view);
 
-  if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); _prevViewPhotos = false; return; }
+  if (view === "overview") {
+    showOverview();
+    playFadeIn(overviewView);
+    pagesScroll?.scrollTo({ top: 0 });
+    window.scrollTo(0, 0);
+    remeasureVVH();          // 写真一覧（バーが縮んだ状態）から来た時の取り残し対策
+    _prevViewPhotos = false;
+    return;
+  }
 
   showImages();
   pagesScroll?.scrollTo({ top: 0 });

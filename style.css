@@ -697,7 +697,11 @@ html, body {
   .content-wrap {
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: var(--vvh, 100%);   /* JSが実測した可視領域の高さ（ツールバー除外）にぴったり合わせる */
+    /* JSが実測した可視領域の高さ（ツールバー除外）に合わせる。ただし svh
+       （＝ツールバーが出ている時の最小ビューポート）を超えさせない。実測値が
+       古い（バーが縮んでいた時の大きい値）ままだと、カードがタブバーの裏まで
+       伸びて不透過の帯として見えるため、上限で頭打ちにしておく。 */
+    height: min(var(--vvh, 100svh), 100svh);
     min-height: 0;              /* base の min-height:100vh を打ち消す */
     flex-direction: column;
     overflow: hidden;
