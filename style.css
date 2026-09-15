@@ -711,9 +711,9 @@ html, body {
   .pages {
     position: static;
     inset: auto;
-    margin: 10px;          /* サイト全体のマージン（上下左右） */
-    margin-top: 10px;
-    margin-bottom: 4px;
+    margin: 9px;          /* サイト全体のマージン（上下左右） */
+    margin-top: 9px;
+    margin-bottom: 2px;
     border-radius: 28px;
     flex: 1 0 auto;        /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
     overflow: visible;
