@@ -140,7 +140,12 @@ export async function onRequestGet({ env, request, waitUntil }) {
   //  → Cloudinary を叩くのは TTL ごとに1回、レスポンスは毎回違う組み合わせ。
   const randomParam = new URL(request.url).searchParams.get("random");
   if (randomParam) {
-    const n = Math.min(60, Math.max(1, parseInt(randomParam, 10) || 12));
+    // 公開エンドポイントなので歯止めは残す（?random=99999 のような要求への蓋）。
+    // "all" は「母集団すべて」の意味。いずれも MAX_RANDOM で頭打ち。
+    const MAX_RANDOM = 500;
+    const n = randomParam === "all"
+      ? MAX_RANDOM
+      : Math.min(MAX_RANDOM, Math.max(1, parseInt(randomParam, 10) || 12));
     try {
       const pool = await edgeCache("random-pool", TTL, async () => {
         let all = [], cursor = null, pages = 0;

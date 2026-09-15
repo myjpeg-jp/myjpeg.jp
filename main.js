@@ -88,7 +88,7 @@ const data = {
   ],
 
   links: [
-    { name: "Instagram", url: "https://instagram.com/yamarnoto", icon: IG_ICON },
+    { name: "Instagram", url: "https://instagram.com", icon: IG_ICON },
   ],
 };
 
@@ -263,7 +263,8 @@ function fallbackSections() {
 // ── Random：写真からランダムに N 枚ピックアップ ──
 //    RANDOM_EXCLUDE のセクション（old など）は対象から外す
 //    ※ 本番の除外判定は functions/api/gallery.js 側でも同じ設定が必要
-const RANDOM_COUNT = 24;
+//    RANDOM_COUNT = 0 なら上限なし（母集団すべてをシャッフルして並べる）
+const RANDOM_COUNT = 0;
 const RANDOM_EXCLUDE = ["old"];
 function shuffled(arr) {
   const a = arr.slice();
@@ -274,8 +275,9 @@ function shuffled(arr) {
   return a;
 }
 async function loadRandom(n = RANDOM_COUNT) {
+  const limit = n > 0 ? String(n) : "all";
   try {
-    const r = await fetch(`/api/gallery?random=${n}`, { cache: "no-store" });
+    const r = await fetch(`/api/gallery?random=${limit}`, { cache: "no-store" });
     if (r.ok) {
       const j = await r.json();
       if (Array.isArray(j.images) && j.images.length) return j.images;
@@ -291,7 +293,7 @@ async function loadRandom(n = RANDOM_COUNT) {
   for (const f of shuffled(folders).slice(0, 4)) {
     for (const im of await ensureFolderImages(f)) pool.push(im);
   }
-  return shuffled(pool).slice(0, n);
+  return n > 0 ? shuffled(pool).slice(0, n) : shuffled(pool);
 }
 
 function findFolder(id) {
@@ -544,6 +546,17 @@ async function route(view) {
   setActive(view);
 
   if (view === "overview") { showOverview(); playFadeIn(overviewView); pagesScroll?.scrollTo({ top: 0 }); window.scrollTo(0, 0); return; }
+
+  // 知らないビュー（古いブックマーク / 改名・削除されたフォルダ）はトップへ逃がす。
+  // そのままだと「写真0枚の空ページ + サイドバー無選択」になって迷子になるため。
+  // 構成が取れていない時（API 障害）は判定できないので、そのまま下の表示に任せる。
+  if (sections.length &&
+      view !== "random" &&
+      !sectionByAllId(view) &&
+      !(view.startsWith("folder:") && findFolder(view.slice(7)))) {
+    location.replace("#" + encodeURIComponent(HOME_VIEW));   // 履歴は増やさない
+    return;
+  }
 
   showImages();
   pagesScroll?.scrollTo({ top: 0 });
