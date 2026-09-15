@@ -261,7 +261,7 @@ html, body {
 /* Finder-style grids (folders & images share base) */
 .finder-grid {
   display: grid;
-  gap: 50px;          /* PC: メインエリアのマージン(--sidebar-inset)に合わせる */
+  gap: 30px;          /* PC: メインエリアのマージン(--sidebar-inset)に合わせる */
 }
 
 /* Overview: grouped by sidebar section, divided into rows */
