@@ -657,16 +657,15 @@ html, body {
     font-size: 1.0625rem;        /* タイトルと同じ 17pt */
     line-height: 1.4;
     letter-spacing: -0.012em;
-    font-weight: 400;            /* 現在地は Regular（タイトルより一段軽く） */
-    color: var(--ink-soft);      /* secondaryLabel */
+    font-weight: 500;            /* Medium */
+    color: var(--ink-mute);      /* tertiaryLabel — 区切りの「/」と同じ濃さ */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .site-crumb::before {
     content: "/";
-    margin-right: 6px;
-    color: var(--ink-mute);      /* 区切り記号はさらに一段薄く */
+    margin-right: 6px;           /* 色は親を継承（現在地と同じ濃さ） */
   }
   .site-crumb:empty { display: none; }   /* 名前が無い時は「/」ごと出さない */
 
