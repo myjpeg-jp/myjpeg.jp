@@ -961,9 +961,44 @@ window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(sync
 // ═══════════════════════════════════════════════════════════
 //  MOBILE MENU (sidebar pulldown)
 // ═══════════════════════════════════════════════════════════
+const pagesEl = document.querySelector(".pages");
 function setMenu(open) {
+  // スクロール途中でメニューを開くと、メニューの高さぶん下のコンテンツが
+  // 押し下げられ、写真が一気にズレて見える（ヘッダー固定にしたので特に目立つ）。
+  // そこで「写真の見た目の位置」を基準にして、高さの変化と同量だけスクロールを
+  // ずらし、写真を画面に貼り付けたまま メニューだけが上から降りてくるようにする。
+  // ブラウザ側のスクロールアンカリングが効いている場合はズレが出ないので、
+  // 差分が 0 のまま＝何もしない（二重補正にならない）。
+  const compensate = window.innerWidth <= MOBILE_BP && window.scrollY > 0 && pagesEl;
+  const y0 = compensate ? pagesEl.getBoundingClientRect().top : 0;
+
   sidebar.classList.toggle("open", open);
   menuToggle.setAttribute("aria-expanded", String(open));
+
+  if (!compensate) return;
+  const end = performance.now() + 700;   // 開閉アニメ 0.45s + 余裕
+  const step = (now) => {
+    const d = pagesEl.getBoundingClientRect().top - y0;
+    if (Math.abs(d) > 0.5) window.scrollBy(0, d);
+    if (now < end) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// ヘッダーが上部に貼り付いている間だけ影を出す（写真の上に浮いていることを示す）。
+// 貼り付いた時の位置は「先頭にいる時の位置」と同じなので、ヘッダー自身を観測しても
+// 変化が出ない。そこでドキュメント先頭に見えない目印を置き、それが画面から出たか
+// どうかで判定する（＝スクロールされたかどうか）。scroll イベントを使わないので、
+// スクロール中に毎フレーム座標を読む必要がない。
+if (window.IntersectionObserver && sidebar) {
+  const mark = document.createElement("div");
+  mark.setAttribute("aria-hidden", "true");
+  mark.style.cssText = "position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;";
+  document.body.appendChild(mark);
+  new IntersectionObserver(
+    ([e]) => sidebar.classList.toggle("is-stuck", !e.isIntersecting),
+    { threshold: [0] }
+  ).observe(mark);
 }
 menuToggle.addEventListener("click", () => setMenu(!sidebar.classList.contains("open")));
 

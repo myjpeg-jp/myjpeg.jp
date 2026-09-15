@@ -38,6 +38,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --bg:          #F2F2F7;               /* systemGroupedBackground       */
   --main-bg:     #FFFFFF;               /* systemBackground              */
   --sidebar-bg:  rgba(255,255,255,0.72);/* frosted sidebar material      */
+  --sidebar-solid: rgb(251,251,253);    /* 上を --bg に重ねた合成色（スマホの固定ヘッダー用） */
   --card-border: rgba(60,60,67,0.29);   /* separator                     */
   --ink:         rgba(0,0,0,0.85);      /* labelColor                    */
   --ink-soft:    rgba(0,0,0,0.5);       /* secondaryLabelColor           */
@@ -62,6 +63,7 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
     --bg:          #000000;               /* systemGroupedBackground (dark)        */
     --main-bg:     #1C1C1E;               /* secondarySystemGroupedBackground      */
     --sidebar-bg:  rgba(44,44,46,0.72);   /* tertiarySystemBackground, frosted     */
+    --sidebar-solid: rgb(32,32,33);       /* 上を --bg に重ねた合成色（スマホの固定ヘッダー用）  */
     --card-border: rgba(255,255,255,0.10);/* separator (dark, macOS 相当)          */
     --ink:         rgba(255,255,255,0.85);/* labelColor (dark)                     */
     --ink-soft:    rgba(235,235,245,0.6); /* secondaryLabelColor (dark)            */
@@ -620,18 +622,30 @@ html, body {
 /* ════════════ Responsive ════════════ */
 @media (max-width: 760px) {
   .sidebar {
-    position: static;
-    inset: auto;
+    /* スクロールしても画面上部に残す（写真を見ている間も現在地が分かるように）。
+       sticky なので通常の流れの中にあり、ページ先頭では今まで通りの見た目。 */
+    position: sticky;
+    inset: auto;                                       /* ← top より先に。後だと top を打ち消す */
+    top: calc(10px + env(safe-area-inset-top, 0px));   /* 貼り付いた時も同じ余白 */
+    z-index: 30;                                       /* 写真より前面へ */
     width: auto;
     margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
     border-radius: 28px;
     padding: 0 14px;
-    /* スマホでは背後が無地の背景色のみ＝ぼかしは視覚効果ゼロなのに、
-       ページスクロールで毎フレーム再計算されるため無効化（GPU 節約） */
+    /* 写真の上に重なるので不透明にする（半透明のままだと写真が透ける）。
+       色は「従来の半透明をページ背景に重ねた時の合成色」と同じなので見た目は不変。
+       backdrop-filter はスクロール中ずっと再計算が走るため使わない（GPU 節約） */
+    background: var(--sidebar-solid);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
   .sidebar.open { padding-bottom: 14px; }
+  /* スクロールして貼り付いている間だけ、下に薄い影（浮いていることを示す）。
+     .is-stuck は main.js が IntersectionObserver で付け外しする */
+  .sidebar.is-stuck {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    transition: box-shadow 0.2s ease;
+  }
 
   /* Clean header row */
   .titlebar {
