@@ -776,7 +776,7 @@ html, body {
   }
 
   /* 画像グリッド: メインエリアのマージン(10px)に合わせる */
-  .finder-grid { gap: 18px; }
+  .finder-grid { gap: 16px; }
 
   /* Overview: 3 columns on mobile */
   .ov-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 6px; }
