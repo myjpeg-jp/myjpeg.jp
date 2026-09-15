@@ -138,6 +138,9 @@ html, body {
   cursor: pointer;              /* クリックでトップ（リンクの見た目にはしない） */
 }
 
+/* 現在地（パンくず）— スマホだけで表示する */
+.site-crumb { display: none; }
+
 /* Mobile menu button — hidden on desktop */
 .menu-toggle { display: none; }
 
@@ -641,8 +644,31 @@ html, body {
   .titlebar .site-title {
     font-size: 1.0625rem;        /* HIG Headline · 17pt */
     line-height: 1.4;            /* room for descenders */
+    flex: 0 0 auto;              /* タイトルは縮めない（縮むのは現在地の方） */
   }
   .traffic-lights { gap: 7px; }
+
+  /* 現在地: my.jpeg / Shinkiba */
+  .site-crumb {
+    display: block;
+    min-width: 0;                /* 省略記号(…)を効かせるために必要 */
+    flex: 0 1 auto;              /* 長い名前はここが縮んで … になる */
+    margin-left: -6px;           /* titlebar の gap(12px) を詰めて「/」を寄せる */
+    font-size: 1.0625rem;        /* タイトルと同じ 17pt */
+    line-height: 1.4;
+    letter-spacing: -0.012em;
+    font-weight: 400;            /* 現在地は Regular（タイトルより一段軽く） */
+    color: var(--ink-soft);      /* secondaryLabel */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .site-crumb::before {
+    content: "/";
+    margin-right: 6px;
+    color: var(--ink-mute);      /* 区切り記号はさらに一段薄く */
+  }
+  .site-crumb:empty { display: none; }   /* 名前が無い時は「/」ごと出さない */
 
   /* Menu button — three dots (ellipsis) */
   .menu-toggle {

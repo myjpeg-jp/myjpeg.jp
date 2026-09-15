@@ -525,6 +525,24 @@ function setActive(view) {
   nav.querySelectorAll(".nav-item").forEach(el =>
     el.classList.toggle("active", el.dataset.view === view)
   );
+  setCrumb(view);
+}
+
+// ヘッダーの現在地表示（スマホのみ CSS で表示）: my.jpeg / Shinkiba
+const siteCrumb = document.getElementById("site-crumb");
+function crumbLabel(view) {
+  if (view === "overview") return "Overview";
+  if (view === HOME_VIEW)  return "Random";
+  const sec = sectionByAllId(view);
+  if (sec) return `${sec.label} (all)`;
+  if (view.startsWith("folder:")) {
+    const f = findFolder(view.slice(7));
+    if (f) return f.name;
+  }
+  return "";
+}
+function setCrumb(view) {
+  if (siteCrumb) siteCrumb.textContent = crumbLabel(view);
 }
 
 function showOverview() {
