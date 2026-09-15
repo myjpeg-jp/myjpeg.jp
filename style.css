@@ -638,8 +638,12 @@ html, body {
     background: var(--sidebar-solid);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+    overflow: visible;   /* PC 用の overflow-y:auto を解除。これが残っていると
+                            重ねて出すメニュー（絶対配置）が 44px の箱で切られる */
   }
-  .sidebar.open { padding-bottom: 14px; }
+  /* メニューを開いてもヘッダーの箱は 44px のまま（パネルは下に重ねて出す）。
+     角丸だけ「上だけ丸い」に変えて、下のパネルと1枚のカードに見せる */
+  .sidebar.open { border-radius: 28px 28px 0 0; }
 
   /* 【一時的な検証用】?bar=static でヘッダー固定を無効化（原因切り分け用） */
   .no-sticky .sidebar { position: static; box-shadow: none; }
@@ -649,6 +653,7 @@ html, body {
     box-shadow: 0 4px 16px rgba(0,0,0,0.10);
     transition: box-shadow 0.2s ease;
   }
+  .sidebar.open.is-stuck { box-shadow: none; }   /* 開いている間の影はパネル側が受け持つ */
 
   /* Clean header row */
   .titlebar {
@@ -706,8 +711,17 @@ html, body {
   }
 
   /* Collapsible nav (pulldown) — grid-rows animates the real height,
-     so open and close are perfectly symmetric (no jerk). */
+     so open and close are perfectly symmetric (no jerk).
+
+     メニューは「ページの流れ」から外して、写真の上に重ねて出す（絶対配置）。
+     流れの中で開くとページの高さが増えて下のコンテンツが押し下げられ、
+     ヘッダー固定と重なると写真が大きくズレる。さらに iOS 26 はその高さ変化を
+     再評価してタブバー裏に不透過の帯を出してしまう。重ねて出す限り、ページの
+     高さもスクロール可能な状態も一切変わらないので、帯の条件に触れない。 */
   .nav {
+    position: absolute;
+    left: 0; right: 0;
+    top: 100%;              /* タイトルバーのすぐ下から */
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows 0.45s ease;
@@ -717,10 +731,16 @@ html, body {
   .nav-inner {
     overflow: hidden;
     min-height: 0;          /* can shrink to 0 when collapsed */
+    /* 流れから外したぶん、カードの見た目（背景・角丸・左右の余白）は自前で持つ */
+    background: var(--sidebar-solid);
+    border-radius: 0 0 28px 28px;
+    padding: 0 14px;
   }
   .sidebar.open .nav-inner {
     max-height: 77vh;
     overflow-y: auto;       /* scroll only if the menu is very long */
+    padding-bottom: 14px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
   }
   /* Top gap lives on the content (clipped when closed) → no leftover
      8px strip, and no snap during collapse. */

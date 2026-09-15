@@ -961,28 +961,11 @@ window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(sync
 // ═══════════════════════════════════════════════════════════
 //  MOBILE MENU (sidebar pulldown)
 // ═══════════════════════════════════════════════════════════
-const pagesEl = document.querySelector(".pages");
 function setMenu(open) {
-  // スクロール途中でメニューを開くと、メニューの高さぶん下のコンテンツが
-  // 押し下げられ、写真が一気にズレて見える（ヘッダー固定にしたので特に目立つ）。
-  // そこで「写真の見た目の位置」を基準にして、高さの変化と同量だけスクロールを
-  // ずらし、写真を画面に貼り付けたまま メニューだけが上から降りてくるようにする。
-  // ブラウザ側のスクロールアンカリングが効いている場合はズレが出ないので、
-  // 差分が 0 のまま＝何もしない（二重補正にならない）。
-  const compensate = window.innerWidth <= MOBILE_BP && window.scrollY > 0 && pagesEl;
-  const y0 = compensate ? pagesEl.getBoundingClientRect().top : 0;
-
+  // メニューは写真の上に重ねて開く（CSS 側で絶対配置）。ページの高さも
+  // スクロール位置も変わらないので、ここでのスクロール補正は不要。
   sidebar.classList.toggle("open", open);
   menuToggle.setAttribute("aria-expanded", String(open));
-
-  if (!compensate) return;
-  const end = performance.now() + 700;   // 開閉アニメ 0.45s + 余裕
-  const step = (now) => {
-    const d = pagesEl.getBoundingClientRect().top - y0;
-    if (Math.abs(d) > 0.5) window.scrollBy(0, d);
-    if (now < end) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
 }
 
 // ── 【一時的な検証用スイッチ】iOS 26 の下部バー裏の帯の原因切り分け ──
