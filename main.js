@@ -88,7 +88,7 @@ const data = {
   ],
 
   links: [
-    { name: "Instagram", url: "https://instagram.com", icon: IG_ICON },
+    { name: "Instagram", url: "https://instagram.com/yamarnoto", icon: IG_ICON },
   ],
 };
 
