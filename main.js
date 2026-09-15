@@ -969,14 +969,15 @@ function setMenu(open) {
 }
 
 // ── 【一時的な検証用スイッチ】iOS 26 の下部バー裏の帯の原因切り分け ──
-//   ?bar=static       → ヘッダー固定を無効
-//   ?bar=flow         → メニューを重ねず、ページの流れの中で開く（以前の挙動）
-//   ?bar=static,flow  → 両方無効（＝今日の変更を入れる前と同じ状態）
-//   指定なし          → 通常（固定あり・メニューは重ねて表示）
+//   ?bar=static  → ヘッダーを固定しない
+//   ?bar=sticky  → fixed ではなく sticky で固定（帯が再現するはずの状態）
+//   ?bar=flow    → メニューを重ねず、ページの流れの中で開く（以前の挙動）
+//   指定なし     → 通常（fixed で固定・メニューは重ねて表示）
 //   原因が確定したら、ここと style.css の .no-sticky / .nav-flow 指定は削除する。
 {
   const bar = (new URLSearchParams(location.search).get("bar") || "").split(",");
   if (bar.includes("static")) document.documentElement.classList.add("no-sticky");
+  if (bar.includes("sticky")) document.documentElement.classList.add("use-sticky");
   if (bar.includes("flow"))   document.documentElement.classList.add("nav-flow");
 }
 

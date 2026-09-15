@@ -623,13 +623,17 @@ html, body {
 @media (max-width: 760px) {
   .sidebar {
     /* スクロールしても画面上部に残す（写真を見ている間も現在地が分かるように）。
-       sticky なので通常の流れの中にあり、ページ先頭では今まで通りの見た目。 */
-    position: sticky;
+       position: sticky は使わない。iOS 26 の Safari は sticky を見つけると
+       下部バーを不透過に切り替え、タブバーの裏にグレーの帯を敷いてしまう
+       （実機で検証済み。同じく浮いている右下のボタンは fixed なので無害）。 */
+    position: fixed;
     inset: auto;                                       /* ← top より先に。後だと top を打ち消す */
-    top: calc(10px + env(safe-area-inset-top, 0px));   /* 貼り付いた時も同じ余白 */
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    left: 10px;
+    right: 10px;
     z-index: 30;                                       /* 写真より前面へ */
     width: auto;
-    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
+    margin: 0;
     border-radius: 28px;
     padding: 0 14px;
     /* 写真の上に重なるので不透明にする（半透明のままだと写真が透ける）。
@@ -645,10 +649,21 @@ html, body {
      角丸だけ「上だけ丸い」に変えて、下のパネルと1枚のカードに見せる */
   .sidebar.open { border-radius: 28px 28px 0 0; }
 
-  /* ── 【一時的な検証用】iOS 26 の帯の原因切り分け（?bar=... で切替）──
-     static … ヘッダー固定を無効（relative のまま＝メニューの位置基準は保つ）
+  /* ── 【一時的な検証用】iOS 26 の帯の切り分け（?bar=... で切替）──
+     static … ヘッダーを固定しない（元の流れの中に戻す）
+     sticky … fixed ではなく sticky で固定（帯が再現するはずの状態）
      flow   … メニューを重ねずに、以前どおりページの流れの中で開く */
-  .no-sticky .sidebar { position: relative; top: auto; box-shadow: none; }
+  .no-sticky .sidebar {
+    position: relative; top: auto; left: auto; right: auto; box-shadow: none;
+    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
+  }
+  .no-sticky .pages { margin-top: 10px; }
+  .use-sticky .sidebar {
+    position: sticky;
+    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
+    left: auto; right: auto;
+  }
+  .use-sticky .pages { margin-top: 10px; }
   .nav-flow .nav { position: static; }
   .nav-flow .nav-inner { background: none; border-radius: 0; padding: 0; }
   .nav-flow .sidebar.open { border-radius: 28px; padding-bottom: 14px; }
@@ -755,7 +770,9 @@ html, body {
     position: static;
     inset: auto;
     margin: 10px;          /* サイト全体のマージン（上下左右） */
-    margin-top: 10px;
+    /* ヘッダーを流れから外した（fixed）ので、その高さぶんだけ本文を下げる。
+       内訳: 上の余白 10px + タイトルバー 44px + 上下の枠線 + ヘッダーとの間隔 10px */
+    margin-top: calc(64px + 2 * var(--hairline) + env(safe-area-inset-top, 0px));
     margin-bottom: 4px;
     border-radius: 28px;
     flex: 1 0 auto;        /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
