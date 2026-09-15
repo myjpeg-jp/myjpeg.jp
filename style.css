@@ -645,8 +645,14 @@ html, body {
      角丸だけ「上だけ丸い」に変えて、下のパネルと1枚のカードに見せる */
   .sidebar.open { border-radius: 28px 28px 0 0; }
 
-  /* 【一時的な検証用】?bar=static でヘッダー固定を無効化（原因切り分け用） */
-  .no-sticky .sidebar { position: static; box-shadow: none; }
+  /* ── 【一時的な検証用】iOS 26 の帯の原因切り分け（?bar=... で切替）──
+     static … ヘッダー固定を無効（relative のまま＝メニューの位置基準は保つ）
+     flow   … メニューを重ねずに、以前どおりページの流れの中で開く */
+  .no-sticky .sidebar { position: relative; top: auto; box-shadow: none; }
+  .nav-flow .nav { position: static; }
+  .nav-flow .nav-inner { background: none; border-radius: 0; padding: 0; }
+  .nav-flow .sidebar.open { border-radius: 28px; padding-bottom: 14px; }
+  .nav-flow .sidebar.open .nav-inner { padding-bottom: 0; box-shadow: none; }
   /* スクロールして貼り付いている間だけ、下に薄い影（浮いていることを示す）。
      .is-stuck は main.js が IntersectionObserver で付け外しする */
   .sidebar.is-stuck {

@@ -969,11 +969,15 @@ function setMenu(open) {
 }
 
 // ── 【一時的な検証用スイッチ】iOS 26 の下部バー裏の帯の原因切り分け ──
-//   myjpeg.jp/?bar=static  → ヘッダー固定を無効（固定を入れる前と同じ状態）
-//   myjpeg.jp/             → 通常（ヘッダー固定あり）
-//   原因が確定したら、この10行と style.css の .no-sticky 指定は削除する。
-if (new URLSearchParams(location.search).get("bar") === "static") {
-  document.documentElement.classList.add("no-sticky");
+//   ?bar=static       → ヘッダー固定を無効
+//   ?bar=flow         → メニューを重ねず、ページの流れの中で開く（以前の挙動）
+//   ?bar=static,flow  → 両方無効（＝今日の変更を入れる前と同じ状態）
+//   指定なし          → 通常（固定あり・メニューは重ねて表示）
+//   原因が確定したら、ここと style.css の .no-sticky / .nav-flow 指定は削除する。
+{
+  const bar = (new URLSearchParams(location.search).get("bar") || "").split(",");
+  if (bar.includes("static")) document.documentElement.classList.add("no-sticky");
+  if (bar.includes("flow"))   document.documentElement.classList.add("nav-flow");
 }
 
 // ヘッダーが上部に貼り付いている間だけ影を出す（写真の上に浮いていることを示す）。
