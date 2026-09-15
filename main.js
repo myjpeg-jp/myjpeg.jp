@@ -962,41 +962,8 @@ window.addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(sync
 //  MOBILE MENU (sidebar pulldown)
 // ═══════════════════════════════════════════════════════════
 function setMenu(open) {
-  // メニューは写真の上に重ねて開く（CSS 側で絶対配置）。ページの高さも
-  // スクロール位置も変わらないので、ここでのスクロール補正は不要。
   sidebar.classList.toggle("open", open);
   menuToggle.setAttribute("aria-expanded", String(open));
-}
-
-// ── 【一時的な検証用スイッチ】iOS 26 の下部バー裏の帯の原因切り分け ──
-//   ?bar=static  → ヘッダーを固定しない
-//   ?bar=sticky  → fixed ではなく sticky で固定（帯が再現するはずの状態）
-//   ?bar=flow    → メニューを重ねず、ページの流れの中で開く（以前の挙動）
-//   ?bar=pill    → 固定ヘッダーを帯状ではなく小さな浮きカードにする
-//   指定なし     → 通常（fixed で固定・メニューは重ねて表示）
-//   原因が確定したら、ここと style.css の .no-sticky / .nav-flow 指定は削除する。
-{
-  const bar = (new URLSearchParams(location.search).get("bar") || "").split(",");
-  if (bar.includes("static")) document.documentElement.classList.add("no-sticky");
-  if (bar.includes("sticky")) document.documentElement.classList.add("use-sticky");
-  if (bar.includes("flow"))   document.documentElement.classList.add("nav-flow");
-  if (bar.includes("pill"))   document.documentElement.classList.add("pill-head");
-}
-
-// ヘッダーが上部に貼り付いている間だけ影を出す（写真の上に浮いていることを示す）。
-// 貼り付いた時の位置は「先頭にいる時の位置」と同じなので、ヘッダー自身を観測しても
-// 変化が出ない。そこでドキュメント先頭に見えない目印を置き、それが画面から出たか
-// どうかで判定する（＝スクロールされたかどうか）。scroll イベントを使わないので、
-// スクロール中に毎フレーム座標を読む必要がない。
-if (window.IntersectionObserver && sidebar) {
-  const mark = document.createElement("div");
-  mark.setAttribute("aria-hidden", "true");
-  mark.style.cssText = "position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden;";
-  document.body.appendChild(mark);
-  new IntersectionObserver(
-    ([e]) => sidebar.classList.toggle("is-stuck", !e.isIntersecting),
-    { threshold: [0] }
-  ).observe(mark);
 }
 menuToggle.addEventListener("click", () => setMenu(!sidebar.classList.contains("open")));
 

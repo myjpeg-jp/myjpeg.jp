@@ -38,7 +38,6 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
   --bg:          #F2F2F7;               /* systemGroupedBackground       */
   --main-bg:     #FFFFFF;               /* systemBackground              */
   --sidebar-bg:  rgba(255,255,255,0.72);/* frosted sidebar material      */
-  --sidebar-solid: rgb(251,251,253);    /* 上を --bg に重ねた合成色（スマホの固定ヘッダー用） */
   --card-border: rgba(60,60,67,0.29);   /* separator                     */
   --ink:         rgba(0,0,0,0.85);      /* labelColor                    */
   --ink-soft:    rgba(0,0,0,0.5);       /* secondaryLabelColor           */
@@ -63,7 +62,6 @@ button, a, .cell, .nav-item, .tl, .menu-toggle, .lb-nav, .lb-close, #grid-steppe
     --bg:          #000000;               /* systemGroupedBackground (dark)        */
     --main-bg:     #1C1C1E;               /* secondarySystemGroupedBackground      */
     --sidebar-bg:  rgba(44,44,46,0.72);   /* tertiarySystemBackground, frosted     */
-    --sidebar-solid: rgb(32,32,33);       /* 上を --bg に重ねた合成色（スマホの固定ヘッダー用）  */
     --card-border: rgba(255,255,255,0.10);/* separator (dark, macOS 相当)          */
     --ink:         rgba(255,255,255,0.85);/* labelColor (dark)                     */
     --ink-soft:    rgba(235,235,245,0.6); /* secondaryLabelColor (dark)            */
@@ -622,68 +620,18 @@ html, body {
 /* ════════════ Responsive ════════════ */
 @media (max-width: 760px) {
   .sidebar {
-    /* スクロールしても画面上部に残す（写真を見ている間も現在地が分かるように）。
-       position: sticky は使わない。iOS 26 の Safari は sticky を見つけると
-       下部バーを不透過に切り替え、タブバーの裏にグレーの帯を敷いてしまう
-       （実機で検証済み。同じく浮いている右下のボタンは fixed なので無害）。 */
-    position: fixed;
-    inset: auto;                                       /* ← top より先に。後だと top を打ち消す */
-    top: calc(10px + env(safe-area-inset-top, 0px));
-    left: 10px;
-    right: 10px;
-    z-index: 30;                                       /* 写真より前面へ */
+    position: static;
+    inset: auto;
     width: auto;
-    margin: 0;
+    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
     border-radius: 28px;
     padding: 0 14px;
-    /* 写真の上に重なるので不透明にする（半透明のままだと写真が透ける）。
-       色は「従来の半透明をページ背景に重ねた時の合成色」と同じなので見た目は不変。
-       backdrop-filter はスクロール中ずっと再計算が走るため使わない（GPU 節約） */
-    background: var(--sidebar-solid);
+    /* スマホでは背後が無地の背景色のみ＝ぼかしは視覚効果ゼロなのに、
+       ページスクロールで毎フレーム再計算されるため無効化（GPU 節約） */
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    overflow: visible;   /* PC 用の overflow-y:auto を解除。これが残っていると
-                            重ねて出すメニュー（絶対配置）が 44px の箱で切られる */
   }
-  /* メニューを開いてもヘッダーの箱は 44px のまま（パネルは下に重ねて出す）。
-     角丸だけ「上だけ丸い」に変えて、下のパネルと1枚のカードに見せる */
-  .sidebar.open { border-radius: 28px 28px 0 0; }
-
-  /* ── 【一時的な検証用】iOS 26 の帯の切り分け（?bar=... で切替）──
-     static … ヘッダーを固定しない（元の流れの中に戻す）
-     sticky … fixed ではなく sticky で固定（帯が再現するはずの状態）
-     flow   … メニューを重ねずに、以前どおりページの流れの中で開く */
-  .no-sticky .sidebar {
-    position: relative; top: auto; left: auto; right: auto; box-shadow: none;
-    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
-  }
-  .no-sticky .pages { margin-top: 10px; }
-  .use-sticky .sidebar {
-    position: sticky;
-    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
-    left: auto; right: auto;
-  }
-  .use-sticky .pages { margin-top: 10px; }
-  /* pill … 固定ヘッダーを「画面幅いっぱいの帯」ではなく、中身なりの小さな
-     浮きカードにする（右下の丸ボタンと同じ性質かどうかを確かめるため） */
-  .pill-head .sidebar {
-    right: auto;
-    width: max-content;
-    max-width: calc(100% - 20px);
-  }
-  .pill-head .titlebar { gap: 10px; }
-  .pill-head .menu-toggle { margin-left: 4px; }
-  .nav-flow .nav { position: static; }
-  .nav-flow .nav-inner { background: none; border-radius: 0; padding: 0; }
-  .nav-flow .sidebar.open { border-radius: 28px; padding-bottom: 14px; }
-  .nav-flow .sidebar.open .nav-inner { padding-bottom: 0; box-shadow: none; }
-  /* スクロールして貼り付いている間だけ、下に薄い影（浮いていることを示す）。
-     .is-stuck は main.js が IntersectionObserver で付け外しする */
-  .sidebar.is-stuck {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-    transition: box-shadow 0.2s ease;
-  }
-  .sidebar.open.is-stuck { box-shadow: none; }   /* 開いている間の影はパネル側が受け持つ */
+  .sidebar.open { padding-bottom: 14px; }
 
   /* Clean header row */
   .titlebar {
@@ -741,17 +689,8 @@ html, body {
   }
 
   /* Collapsible nav (pulldown) — grid-rows animates the real height,
-     so open and close are perfectly symmetric (no jerk).
-
-     メニューは「ページの流れ」から外して、写真の上に重ねて出す（絶対配置）。
-     流れの中で開くとページの高さが増えて下のコンテンツが押し下げられ、
-     ヘッダー固定と重なると写真が大きくズレる。さらに iOS 26 はその高さ変化を
-     再評価してタブバー裏に不透過の帯を出してしまう。重ねて出す限り、ページの
-     高さもスクロール可能な状態も一切変わらないので、帯の条件に触れない。 */
+     so open and close are perfectly symmetric (no jerk). */
   .nav {
-    position: absolute;
-    left: 0; right: 0;
-    top: 100%;              /* タイトルバーのすぐ下から */
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows 0.45s ease;
@@ -761,16 +700,10 @@ html, body {
   .nav-inner {
     overflow: hidden;
     min-height: 0;          /* can shrink to 0 when collapsed */
-    /* 流れから外したぶん、カードの見た目（背景・角丸・左右の余白）は自前で持つ */
-    background: var(--sidebar-solid);
-    border-radius: 0 0 28px 28px;
-    padding: 0 14px;
   }
   .sidebar.open .nav-inner {
     max-height: 77vh;
     overflow-y: auto;       /* scroll only if the menu is very long */
-    padding-bottom: 14px;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
   }
   /* Top gap lives on the content (clipped when closed) → no leftover
      8px strip, and no snap during collapse. */
@@ -779,9 +712,7 @@ html, body {
     position: static;
     inset: auto;
     margin: 10px;          /* サイト全体のマージン（上下左右） */
-    /* ヘッダーを流れから外した（fixed）ので、その高さぶんだけ本文を下げる。
-       内訳: 上の余白 10px + タイトルバー 44px + 上下の枠線 + ヘッダーとの間隔 10px */
-    margin-top: calc(64px + 2 * var(--hairline) + env(safe-area-inset-top, 0px));
+    margin-top: 10px;
     margin-bottom: 4px;
     border-radius: 28px;
     flex: 1 0 auto;        /* 内容の高さに合わせて伸びる（内部スクロールはしない） */
