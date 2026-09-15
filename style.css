@@ -782,7 +782,7 @@ html, body {
   .ov-group { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 6px; }
 
   .ov-divider { margin: 24px 0; }
-  .cell { gap: 10px; }                    /* photo thumbnails keep their spacing */
+  .cell { gap: 6px; }                    /* photo thumbnails keep their spacing */
   .folder-cell, .file-cell { gap: 4px; }  /* Overview only: icon ↔ title closer */
   .cell-icon img.icon-png { width: clamp(68px, 25vw, 100px); height: auto; }  /* 3-up, slight inset */
   .folder-cell .cell-icon svg,
