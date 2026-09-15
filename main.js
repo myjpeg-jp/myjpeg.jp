@@ -972,6 +972,7 @@ function setMenu(open) {
 //   ?bar=static  → ヘッダーを固定しない
 //   ?bar=sticky  → fixed ではなく sticky で固定（帯が再現するはずの状態）
 //   ?bar=flow    → メニューを重ねず、ページの流れの中で開く（以前の挙動）
+//   ?bar=pill    → 固定ヘッダーを帯状ではなく小さな浮きカードにする
 //   指定なし     → 通常（fixed で固定・メニューは重ねて表示）
 //   原因が確定したら、ここと style.css の .no-sticky / .nav-flow 指定は削除する。
 {
@@ -979,6 +980,7 @@ function setMenu(open) {
   if (bar.includes("static")) document.documentElement.classList.add("no-sticky");
   if (bar.includes("sticky")) document.documentElement.classList.add("use-sticky");
   if (bar.includes("flow"))   document.documentElement.classList.add("nav-flow");
+  if (bar.includes("pill"))   document.documentElement.classList.add("pill-head");
 }
 
 // ヘッダーが上部に貼り付いている間だけ影を出す（写真の上に浮いていることを示す）。

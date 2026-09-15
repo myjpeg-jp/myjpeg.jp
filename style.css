@@ -664,6 +664,15 @@ html, body {
     left: auto; right: auto;
   }
   .use-sticky .pages { margin-top: 10px; }
+  /* pill … 固定ヘッダーを「画面幅いっぱいの帯」ではなく、中身なりの小さな
+     浮きカードにする（右下の丸ボタンと同じ性質かどうかを確かめるため） */
+  .pill-head .sidebar {
+    right: auto;
+    width: max-content;
+    max-width: calc(100% - 20px);
+  }
+  .pill-head .titlebar { gap: 10px; }
+  .pill-head .menu-toggle { margin-left: 4px; }
   .nav-flow .nav { position: static; }
   .nav-flow .nav-inner { background: none; border-radius: 0; padding: 0; }
   .nav-flow .sidebar.open { border-radius: 28px; padding-bottom: 14px; }
