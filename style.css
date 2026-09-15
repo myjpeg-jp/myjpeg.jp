@@ -640,6 +640,9 @@ html, body {
     -webkit-backdrop-filter: none;
   }
   .sidebar.open { padding-bottom: 14px; }
+
+  /* 【一時的な検証用】?bar=static でヘッダー固定を無効化（原因切り分け用） */
+  .no-sticky .sidebar { position: static; box-shadow: none; }
   /* スクロールして貼り付いている間だけ、下に薄い影（浮いていることを示す）。
      .is-stuck は main.js が IntersectionObserver で付け外しする */
   .sidebar.is-stuck {

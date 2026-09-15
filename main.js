@@ -985,6 +985,14 @@ function setMenu(open) {
   requestAnimationFrame(step);
 }
 
+// ── 【一時的な検証用スイッチ】iOS 26 の下部バー裏の帯の原因切り分け ──
+//   myjpeg.jp/?bar=static  → ヘッダー固定を無効（固定を入れる前と同じ状態）
+//   myjpeg.jp/             → 通常（ヘッダー固定あり）
+//   原因が確定したら、この10行と style.css の .no-sticky 指定は削除する。
+if (new URLSearchParams(location.search).get("bar") === "static") {
+  document.documentElement.classList.add("no-sticky");
+}
+
 // ヘッダーが上部に貼り付いている間だけ影を出す（写真の上に浮いていることを示す）。
 // 貼り付いた時の位置は「先頭にいる時の位置」と同じなので、ヘッダー自身を観測しても
 // 変化が出ない。そこでドキュメント先頭に見えない目印を置き、それが画面から出たか
