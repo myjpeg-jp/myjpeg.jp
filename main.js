@@ -328,16 +328,16 @@ async function ensureFolderImages(folder) {
 function renderNav() {
   const parts = [];
 
-  // よく使う項目（Random / Overview）
+  // よく使う項目（Overview / Random）
   parts.push(`
     <div class="nav-section">
       <p class="nav-label">よく使う項目</p>
       <ul class="nav-list">
-        <li class="nav-item" data-view="random">
-          ${navShuffleGlyph()}<span class="label">Random</span>
-        </li>
         <li class="nav-item" data-view="overview">
           ${navHomeGlyph()}<span class="label">Overview</span>
+        </li>
+        <li class="nav-item" data-view="random">
+          ${navShuffleGlyph()}<span class="label">Random</span>
         </li>
       </ul>
     </div>`);
