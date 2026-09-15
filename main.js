@@ -718,7 +718,7 @@ document.addEventListener("keydown", e => {
   }
 });
 
-// Swipe navigation (mobile) — left = next, right = prev
+// Swipe（mobile）— 左右 = 前後の写真 / 下 = 閉じる（iOS の写真アプリと同じ作法）
 let touchX = null, touchY = null;
 lightbox.addEventListener("touchstart", e => {
   const t = e.changedTouches[0];
@@ -730,6 +730,7 @@ lightbox.addEventListener("touchend", e => {
   const dx = t.clientX - touchX, dy = t.clientY - touchY;
   touchX = touchY = null;
   if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) lbStep(dx < 0 ? 1 : -1);
+  else if (dy > 70 && dy > Math.abs(dx) * 1.5) closeLightbox();   // 下スワイプで閉じる
 }, { passive: true });
 
 // ═══════════════════════════════════════════════════════════
